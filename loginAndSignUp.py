@@ -3,91 +3,149 @@ import os
 import json
 import time
 import main_functions
-from pynput import keyboard
-import threading
+import tkinter as tk
+from tkinter import filedialog
+from tkinter import messagebox
+from tkinter import ttk
+from tkinter import *
+import os
 
-usernameData = ""
 
-runningFunction = "handle"
+class EntryWithPlaceholder(tk.Entry):
+    def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
+        super().__init__(master)
 
-# Open the json file
+        self.placeholder = placeholder
+        self.placeholder_color = color
+        self.default_fg_color = self['fg']
+
+        self.bind("<FocusIn>", self.foc_in)
+        self.bind("<FocusOut>", self.foc_out)
+
+        self.put_placeholder()
+
+    def put_placeholder(self):
+        self.insert(0, self.placeholder)
+        self['fg'] = self.placeholder_color
+
+    def foc_in(self, *args):
+        if self['fg'] == self.placeholder_color:
+            self.delete('0', 'end')
+            self['fg'] = self.default_fg_color
+
+    def foc_out(self, *args):
+        if not self.get():
+            self.put_placeholder()
+
+root = Tk()
+
+color = "#CAF1DE"
+
+root.title("Data Manager")
+root.geometry("600x500")
+root.configure(bg="#CAF1DE")
+
+userEntryMode = "login"
+
+label_Title = Label(root, text="Data Manager", bg=color,
+                    font=("@Yu Gothic UI Semibold", 20, "normal"))
+label_Title.place(relx=0.5,rely=0.05,anchor=CENTER)
+
+input_Username = EntryWithPlaceholder(root, placeholder="Username")
+input_Username["width"] = 40
+input_Username["font"] = ("@Yu Gothic UI Semibold", 15, "normal")
+input_Username.place(relx=0.5,rely=0.2, anchor=CENTER)
+
+input_Password = EntryWithPlaceholder(root, placeholder="Password")
+input_Password["width"] = 40
+input_Password["font"] = ("@Yu Gothic UI Semibold", 15, "normal")
+input_Password.place(relx=0.5, rely=0.3, anchor=CENTER)
+
+button_Login = Button(root, text="Log In", relief="flat",
+                      padx=70, pady=5, bg="#2C95F6", fg="white",font=("Arial", 10,"bold"))
+button_Login.place(relx=0.5,rely=0.45, anchor=CENTER)
+
+label_DontHaveAAccount = Label(root, text="Don't have an account? ", font=(
+    "Arial", 13, "normal"), bg=color)
+label_DontHaveAAccount.place(relx=0.3,rely=0.7)
+
+button_DontHaveAAccount = Button(root, text="Sign Up", relief="flat", bg=color, font=("Arial", 13, "normal"), fg="#2C95F6",)
+
+def changeUserEntryMode():
+    global userEntryMode
+    global button_DontHaveAAccount
+    global label_DontHaveAAccount
+    global button_Login
+    if userEntryMode == "login":
+        userEntryMode = "signup"
+        button_Login["text"] = "Sign Up"
+        button_DontHaveAAccount["text"] = "Log In"
+        label_DontHaveAAccount["text"] = "Have a account? "
+    elif userEntryMode == "signup":
+        userEntryMode = "login"
+        button_Login["text"] = "Log In"
+        button_DontHaveAAccount["text"] = "Sign Up"
+        label_DontHaveAAccount["text"] = "Don't have an account? "
+button_DontHaveAAccount["command"] = changeUserEntryMode
+button_DontHaveAAccount.place(relx=0.59, rely=0.69,)
+
+def handle():
+    if userEntryMode == "login":
+        login()
+    elif userEntryMode == "signup":
+        signup()
+
 with open('accounts.json') as json_file:
     accountsData = json.load(json_file)
-# Important Functions
-def signup():
-    global runningFunction
-    runningFunction = "signup"
-    print("Please enter the following information:\n")
-    username = input("Enter username: ")
-    password = input("Enter password: ")
-    if username != "" and password != "":
-        if username in accountsData["accounts"]:
-            print("Username already exists. Please try again.")
-            signup()
-        encryptedPassword = main_functions.encryptText(username, password)
-        accountsData["accounts"][username] = encryptedPassword
-        with open('accounts.json', 'w') as outfile:
-            json.dump(accountsData, outfile)
-        os.system("cls")
-        print("Account created successfully.")
-        os.mkdir(str(os.getcwd())+"\\Data\\"+username)
-        with open(str(os.getcwd())+"\\Data\\"+username+"\\"+"data.json", "w") as f:
-            f.write("{\"data\": {}}")
-        print("\n")
-        username = usernameData
-        os.system(f'py handler.py "{usernameData}"')
-
-
 def login():
-    # Run the function checkIf in a new thread to prevent the program from freezing
-    global runningFunction
-    runningFunction = "login"
-    global usernameData
-    print("Please enter the following information:\n")
-    username = input("Enter username: ")
-    password = input("Enter password: ")
-    usernameData = username
-    if username in accountsData["accounts"]:
-        encryptedPassword = accountsData["accounts"][username]
-        decryptedPassword = main_functions.decryptData(username, encryptedPassword)
-        if password == decryptedPassword:
-            print("Login successful.")
-            print("\n")
-            os.system("cls")
-            os.system(f"py handler.py \"{username}\"")
-        else:
-            print("Incorrect password. Please try again.")
-            login()
-            print("\n")
-    else:
-        print("Username does not exist. Please try again.")
-        login()
-        print("\n")
-        return username
+    pass
 
-    
-print("Welcome to Manager\n")
+def signup():
+    pass
 
-print("What do you want to do?\n")
-print("(1) Create new account")
-print("(2) Log in")
-print("(3) Exit")
-def handle():
-    
-    global runningFunction
-    runningFunction = "handle"
-    global usernameData
-    command = input("Enter command: ")
-    if command=="1":
-        signup()
-        time.sleep(5)
-    elif command=="2":
-        login()
-        os.system(f'py handler.py "{usernameData}"')
-    elif command=="3":
-        print("Bye, See you next time!")
-        exit()
-    else:
-        print("Invalid command. Please try again.")
-        handle()
-handle()
+# usernameData = ""
+# runningFunction = "handle"
+# def signup(username,password):
+#     global runningFunction
+#     runningFunction = "signup"
+#     if username != "" and password != "":
+#         if username in accountsData["accounts"]:
+#             print("Username already exists. Please try again.")
+#             signup()
+#         encryptedPassword = main_functions.encryptText(username, password)
+#         accountsData["accounts"][username] = encryptedPassword
+#         with open('accounts.json', 'w') as outfile:
+#             json.dump(accountsData, outfile)
+#         os.system("cls")
+#         os.mkdir(str(os.getcwd())+"\\Data\\"+username)
+#         with open(str(os.getcwd())+"\\Data\\"+username+"\\"+"data.json", "w") as f:
+#             f.write("{\"data\": {}}")
+#         print("\n")
+#         username = usernameData
+
+
+# def login(username,password):
+#     global runningFunction
+#     runningFunction = "login"
+#     global usernameData
+#     usernameData = username
+#     if username in accountsData["accounts"]:
+#         encryptedPassword = accountsData["accounts"][username]
+#         decryptedPassword = main_functions.decryptData(username, encryptedPassword)
+#         if password == decryptedPassword:
+#             print("Login successful.")
+#             print("\n")
+#             os.system("cls")
+#             os.system(f"py handler.py \"{username}\"")
+#         else:
+#             print("Incorrect password. Please try again.")
+#             login()
+#             print("\n")
+#     else:
+#         print("Username does not exist. Please try again.")
+#         login()
+#         print("\n")
+#         return username
+
+
+root.mainloop()
