@@ -22,6 +22,7 @@
 
 ```sh
 git clone https://github.com/hamzah-sajid-code/Data-Manager
+cd Data-Manager
 ```
 
 ## Usage
