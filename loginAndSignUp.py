@@ -71,6 +71,9 @@ label_DontHaveAAccount.place(relx=0.3,rely=0.7)
 
 button_DontHaveAAccount = Button(root, text="Sign Up", relief="flat", bg=color, font=("Arial", 13, "normal"), fg="#2C95F6",)
 
+label_msg = Label(root,text="",fg="red",bg=color, font=("Arial", 13, "bold"))
+label_msg.place(relx=0.5,rely=0.6, anchor=CENTER)
+
 def changeUserEntryMode():
     global userEntryMode
     global button_DontHaveAAccount
@@ -98,7 +101,31 @@ def handle():
 with open('accounts.json') as json_file:
     accountsData = json.load(json_file)
 def login():
-    pass
+    global usernameData
+    global label_msg
+    username = input_Username.get()
+    password = input_Password.get()
+    usernameData = username
+    if username in accountsData["accounts"]:
+        encryptedPassword = accountsData["accounts"][username]
+        decryptedPassword = main_functions.decryptData(username, encryptedPassword)
+        if password == decryptedPassword:
+            label_msg["fg"] = "lime"
+            label_msg["text"] = "Logged In successfully"
+            messagebox.showinfo("Login Successful", "You are now logged in")
+        else:
+            label_msg["fg"] = "red"
+            label_msg["text"] = "Username password is wrong! Please try again."
+            messagebox.showerror(
+                "Wrong password", "Username password is wrong! Please try again.")
+    else:
+        label_msg["fg"] = "red"
+        label_msg["text"] = "Username does not exists! Please try again."
+        messagebox.showerror("Username not found",
+                             "Username does not exists! Please try again.")
+        return username
+
+button_Login["command"] = handle
 
 def signup():
     pass
