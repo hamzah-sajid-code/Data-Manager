@@ -3,8 +3,7 @@ import argparse
 import json
 import os
 from tkinter import filedialog
-import threading
-import main_functions
+from tkinter import messagebox
 
 # get username argument from the command line
 parser = argparse.ArgumentParser()
@@ -12,159 +11,95 @@ parser.add_argument("username", help="username")
 args = parser.parse_args()
 username = args.username
 
-print("\n(1) Make Data")
-print("(2) View Data")
-print("(3) Delete Data")
-print("(4) Export Data")
-print("(5) Back")
-print("(6) Log out")
-print("(7) Exit")
-
-with open(str(os.getcwd())+"\\Data\\"+username+"\\"+"data.json") as json_file:
+with open(str(os.getcwd()) + "\\Data\\" + username + "\\" + "data.json") as json_file:
     dataJSON = json.load(json_file)
 
-def makeData():
-    print("\nPlease enter the following information:")
-    print("For adding more data respectively to their labels, please add parallel line between them.\n")
-    nameData = input("Enter a name for the data: ")
-    label = input("Enter labels: ")
-    data = input("Enter data: ")
-    if label != "" and data != "":
-        if len(label.split(" | ")) == len(data.split(" | ")):
+
+def makeData(nameData, label, data):
+    if nameData != "" and len(label) != 0 and len(data) != 0:
+        if len(label) == len(data):
             finalData = {}
-            label = label.split(" | ")
-            data = data.split(" | ")
-            dataDict = dict(zip(label, data))
-            finalData[nameData] = dataDict
-            dataJSON["data"].update(finalData)
-            with open(str(os.getcwd())+"\Data\\"+username+"\\"+"data.json", "w") as f:
-                json.dump(dataJSON, f)
-            print("\n")
-            print("Data added successfully.")
-            handle()
-        else:
-            print("\nInvalid data. Please try again.\n")
-            makeData()
-    else:
-        print("\nPlease enter the data.")
-        makeData()
-
-def viewData():
-    print("List of all data by key name\n")
-    if dataJSON["data"] != {}:
-        for key in dataJSON["data"]:
-            print(key)
-        print("\n")
-
-        nameData = input("Select a data to view: ")
-        if nameData != "":
-            if nameData in dataJSON["data"]:
-                print(f"\nData in {nameData}")
-                for key in dataJSON["data"][nameData]:
-                    print(key, ":", dataJSON["data"][nameData][key])
-                handle()
-            else:
-                print("\nInvalid data. Please try again.\n")
-                viewData()
-        else:
-            print("\nInvalid data. Please try again.\n")
-            viewData()
-    else:
-        print("No data found.\n")
-        handle()
-        # When CTRL+B is pressed, the program will call the handler function
-
-def deleteData():
-    if dataJSON["data"] != {}:
-        print("List of all data by key name\n")
-        for key in dataJSON["data"]:
-            print(key)
-        print("\n")
-        nameData = input("Enter a data to delete: ")
-        if nameData != "":
-            if nameData in dataJSON["data"]:
-                del dataJSON["data"][nameData]
-                with open(str(os.getcwd())+"\Data\\"+username+"\\"+"data.json", "w") as f:
+            for x in range(len(label)):
+                dataDict = dict(zip(label[x], data[x]))
+                finalData[nameData] = dataDict
+                dataJSON["data"].update(finalData)
+                with open(str(os.getcwd()) + "\\Data\\" + username + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
-                print("\n")
-                print("Data deleted successfully.")
-                handle()
-            else:
-                print("\nInvalid data. Please try again.\n")
-                deleteData()
         else:
-            print("\nInvalid data. Please try again.\n")
-            deleteData()
+            messagebox.showerror("Data not given properly",
+                                 "Please check if the data give is respectively to the label, there are blank spaces.")
     else:
-        print("No data found.\n")
-        handle()
-def exportData():
-    if dataJSON["data"] != {}:
-        root = Tk()
-        folder = filedialog.askdirectory(title="Select folder")
-        root.destroy()
-        print("List of all data by key name\n")
+        messagebox.showerror("Data not given properly",
+                             "Please check if the data name is not empty and the label and data are not empty")
+
+
+class ViewData:
+    def __init__(self):
+        self.data = []
         for key in dataJSON["data"]:
-            print(key)
-        print("\n")
-        nameData = input("Enter a data to export: ")
-        if nameData != "" and nameData != "all":
-            if nameData in dataJSON["data"]:
-                with open(str(folder)+"\\"+nameData+".txt", "w") as f:
-                    f.write("Your data in " + nameData + ":\n")
-                    for key in dataJSON["data"][nameData]:
-                        f.write(key+" : "+dataJSON["data"][nameData][key]+"\n")
-                    f.close()
-                print("\n")
-                print("Data exported successfully.")
-                handle()
-            else:
-                print("\nInvalid data. Please try again.\n")
-                exportData()
-        elif nameData != "" and nameData == "all" or nameData == "All":
-            fileName = "All Exported Data.txt"
-            if os.path.isfile(folder+"\\"+fileName):
-                i = 1
-                while os.path.isfile(folder+"\\"+fileName):
-                    fileName, fileExtension = os.path.splitext(fileName)
-                    fileName = fileName+" ("+str(i)+")"+fileExtension
-                    i += 1
-            f = open(folder+"\\"+fileName, "w")
-            f.write("Your data:")
-            for key in dataJSON["data"]:
-                print(key)
-                f.write("\nYour data in " + key + ":\n")
-                for key2 in dataJSON["data"][key]:
-                    f.write(key2+" : "+dataJSON["data"][key][key2]+"\n")
-            f.close()
-            print("\n")
-            print("Data exported successfully.")
-            handle()
+            self.data.append(key)
+
+    def viewData(self, dataName):
+        if self.data != [] and dataName != "":
+            return dataJSON["data"][dataName]
         else:
-            print("\nInvalid data. Please try again.\n")
-            exportData()
-    else:
-        print("No data found.\n")
-        handle()
+            messagebox.showerror("No data found", "There is no data name give or there is not data give to us")
 
-def handle():
-    command = input("Enter command: ")
-    if command == "1":
-        makeData()
-    elif command == "2":
-        viewData()
-    elif command == "3":
-        deleteData()
-    elif command == "4":
-        exportData()
-    elif command == "5":
-        os.system("py handler.py \""+username+"\"")
-    elif command == "6":
-        main_functions.logout()
-    elif command == "7":
-        exit()
-    else:
-        print("\nInvalid command. Please try again.\n")
-        handle()
 
-handle()
+class DeleteData:
+    def __init__(self):
+        self.data = []
+        for key in dataJSON["data"]:
+            self.data.append(key)
+
+    def deleteData(self, dataName):
+        if self.data != [] and dataName != "" and dataName in dataJSON["data"]:
+            del dataJSON["data"][dataName]
+            with open(str(os.getcwd()) + "\\Data\\" + username + "\\" + "data.json", "w") as f:
+                json.dump(dataJSON, f)
+            messagebox.showinfo("Delete operation successful", f"We have deleted {dataName} from our database")
+        else:
+            messagebox.showerror("No data found", "There is no data name give or there is not data give to us")
+
+
+class ExportData:
+    def __init__(self):
+        self.data = []
+        for key in dataJSON["data"]:
+            self.data.append(key)
+        if self.data:
+            self.data.append("all")
+
+    def deleteData(self, dataName):
+        if self.data != [] and dataName != "" and dataName in dataJSON["data"]:
+            tkinterfile = Tk()
+            folder = filedialog.askdirectory(title="Select folder")
+            tkinterfile.destroy()
+            if dataName != "" and dataName != "all":
+                if dataName in dataJSON["data"]:
+                    with open(str(folder) + "\\" + dataName + ".txt", "w") as f:
+                        f.write("Your data in " + dataName + ":\n")
+                        for key in dataJSON["data"][dataName]:
+                            f.write(key + " : " + dataJSON["data"][dataName][key] + "\n")
+                        f.close()
+                        messagebox.showinfo("successfully exported data",
+                                            f"We have successfully exported data of {dataName}")
+            elif dataName != "" and dataName == "all":
+                fileName = "All Exported Data.txt"
+                if os.path.isfile(folder + "\\" + fileName):
+                    i = 1
+                    while os.path.isfile(folder + "\\" + fileName):
+                        fileName, fileExtension = os.path.splitext(fileName)
+                        fileName = fileName + " (" + str(i) + ")" + fileExtension
+                        i += 1
+                f = open(folder + "\\" + fileName, "w")
+                f.write("Your data:")
+                for key in dataJSON["data"]:
+                    print(key)
+                    f.write("\nYour data in " + key + ":\n")
+                    for key2 in dataJSON["data"][key]:
+                        f.write(key2 + " : " + dataJSON["data"][key][key2] + "\n")
+                f.close()
+                messagebox.showinfo("successfully exported data", "We have successfully exported all the data")
+        else:
+            messagebox.showerror("No data found", "There is no data name give or there is not data give to us")
