@@ -6,7 +6,6 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
-
 import main_functions
 
 color = "#CAF1DE"
@@ -181,21 +180,18 @@ def handlerWhatTo(usernameFromData):
     label_whatToDo = Label(root, text="What You Want To Do? ", bg=color, font=("@Yu Gothic UI Semibold", 20, "normal"))
     label_whatToDo.place(relx=0.1, rely=0.2)
 
-    label_ChoiceStringVar = tk.StringVar()
     label_Choice = ttk.Combobox(values=["Work with data", "Work with files"], state="readonly",
-                                textvariable=label_ChoiceStringVar, font=("@Yu Gothic UI Semibold", 20, "normal"))
+                                font=("@Yu Gothic UI Semibold", 20, "normal"))
     label_Choice.place(relx=0.5, rely=0.4, anchor=CENTER)
     label_Choice.current(0)
 
     def changeScript():
-        if label_ChoiceStringVar == "Work with data":
+        if label_Choice.get() == "Work with data":
             root.destroy()
-            workWithData()
-        elif label_ChoiceStringVar == "Work with files":
+            workWithData(usernameFromData)
+        elif label_Choice.get() == "Work with files":
             root.destroy()
             workWithFiles()
-        else:
-            messagebox.showerror("No value error", "Please select a value than go ahead!")
 
     button_go = Button(root, text="Go!", relief="flat", bg="#70CED4", width=30, height=1,
                        font=("@Yu Gothic UI Semibold", 15, "bold"), command=changeScript)
@@ -204,7 +200,98 @@ def handlerWhatTo(usernameFromData):
     root.mainloop()
 
 
-def workWithData():
+def workWithData(usernameGave):
+    root = Tk()
+    root.geometry("600x400")
+    root.title("Data Manager")
+    root.configure(bg=color)
+
+    label_Title = Label(root, text="Work With Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    label_Operations = ttk.Combobox(root, values=["Create Data", "View Data", "Delete Data", "Export Data"],
+                                    state="readonly", font=("@Yu Gothic UI Semibold", 15, "normal"))
+    label_Operations.place(relx=0.5, rely=0.25, anchor=CENTER)
+    label_Operations.current(0)
+
+    def changeScreen():
+        if label_Operations.get() == "Create Data":
+            makeData(usernameGave)
+        elif label_Operations.get() == "View Data":
+            viewData(usernameGave)
+        elif label_Operations.get() == "Delete Data":
+            deleteData(usernameGave)
+        elif label_Operations.get() == "Export Data":
+            exportData(usernameGave)
+
+    button_Do = Button(root, text="Continue", font=("@Yu Gothic UI Semibold", 13, "normal"), command=changeScreen,
+                       relief="flat", bg="#70CED4", fg="white")
+    button_Do.place(relx=0.5, rely=0.5, anchor=CENTER)
+    root.mainloop()
+
+
+def makeData(usernameDataGave):
+    root = Tk()
+    root.geometry("600x500")
+    root.title("Data Manager")
+    root.configure(bg=color)
+    label_Title = Label(root, text="Create Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    label_insrtuction = Label(root, text="Please put the labels and data \" | \" seprated", bg=color,
+                              font=("@Yu Gothic UI Semibold", 15, "normal"))
+    label_insrtuction.place(relx=0.2, rely=0.2)
+    input_DataName = EntryWithPlaceholder(root, placeholder="Data Name")
+    input_Labels = EntryWithPlaceholder(root, placeholder="Data Labels")
+    input_data = EntryWithPlaceholder(root, placeholder="Data")
+    input_DataName["width"] = 40
+    input_Labels["width"] = 40
+    input_data["width"] = 40
+    input_DataName["font"] = ("@Yu Gothic UI Semibold", 15, "normal")
+    input_Labels["font"] = ("@Yu Gothic UI Semibold", 15, "normal")
+    input_data["font"] = ("@Yu Gothic UI Semibold", 15, "normal")
+    input_DataName.place(relx=0.5, rely=0.3, anchor=CENTER)
+    input_Labels.place(relx=0.5, rely=0.4, anchor=CENTER)
+    input_data.place(relx=0.5, rely=0.5, anchor=CENTER)
+
+    def back():
+        workWithData(usernameDataGave)
+
+    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+        dataJSON = json.load(json_file)
+
+    def makeDataNew():
+        nameDataIn = input_DataName.get()
+        labelIn = input_Labels.get().split(" | ")
+        dataIn = input_data.get().split(" | ")
+        if nameDataIn != "" and len(labelIn) != 0 and len(dataIn) != 0:
+            if len(labelIn) == len(labelIn):
+                finalData = {}
+                dataDict = dict(zip(labelIn, dataIn))
+                finalData[nameDataIn] = dataDict
+                dataJSON["data"].update(finalData)
+                with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
+                    json.dump(dataJSON, f)
+            else:
+                messagebox.showerror("Data not given properly",
+                                     "Please check if the data give is respectively to the label, there are blank spaces.")
+        else:
+            messagebox.showerror("Data not given properly",
+                                 "Please check if the data name is not empty and the label and data are not empty")
+
+    button_createData = Button(root, text="Create Data", font=("@Yu Gothic UI Semibold", 15, "normal"), relief=FLAT,
+                               bg="#70CED4", fg="white", command=makeDataNew)
+    button_createData.place(relx=0.5, rely=0.7)
+    root.mainloop()
+
+
+def viewData(usernameDataGave):
+    pass
+
+
+def deleteData(usernameDataGave):
+    pass
+
+
+def exportData(usernameDataGave):
     pass
 
 
