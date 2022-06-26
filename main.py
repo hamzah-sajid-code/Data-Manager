@@ -284,7 +284,30 @@ def makeData(usernameDataGave):
 
 
 def viewData(usernameDataGave):
-    pass
+    root = Tk()
+    root.geometry("600x500")
+    root.title("Data Manager")
+    root.configure(bg=color)
+
+    label_Title = Label(root, text="View Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    data = []
+    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+        dataJSON = json.load(json_file)
+    for key in dataJSON["data"]:
+        data.append(key)
+    comboxbox_options = ttk.Combobox(root, values=[], font=("@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
+    try:
+        comboxbox_options.current(0)
+    except:
+        pass
+    dataName = comboxbox_options.get()
+    if data != [] and dataName != "":
+        gotdata = dataJSON["data"][dataName]
+    else:
+        messagebox.showerror("No data found", "There is no data name give or there is not data give to us")
+    root.mainloop()
 
 
 def deleteData(usernameDataGave):
@@ -298,5 +321,5 @@ def exportData(usernameDataGave):
 def workWithFiles():
     pass
 
-
-handlerWhatTo("Hamzah Sajid")
+loginAndSignUp()
+# handlerWhatTo("Hamzah Sajid")
