@@ -37,10 +37,14 @@ class EntryWithPlaceholder(tk.Entry):
         if not self.get():
             self.put_placeholder()
 
-
+root = Tk()
+label_msg = Label(root, text="", fg="red", bg=color, font=("Arial", 13, "bold"))
+userEntryMode = "login"
+button_Login = Button()
 def loginAndSignUp():
-    root = Tk()
-
+    global  button_Login
+    global userEntryMode
+    global label_msg
     def change(username):
         root.destroy()
         handlerWhatTo(username)
@@ -49,7 +53,6 @@ def loginAndSignUp():
     root.geometry("600x500")
     root.configure(bg="#CAF1DE")
 
-    userEntryMode = "login"
     usernameData = ""
 
     label_Title = Label(root, text="Data Manager", bg=color,
@@ -77,7 +80,6 @@ def loginAndSignUp():
     button_DontHaveAAccount = Button(root, text="Sign Up", relief="flat", bg=color, font=("Arial", 13, "normal"),
                                      fg="#2C95F6", )
 
-    label_msg = Label(root, text="", fg="red", bg=color, font=("Arial", 13, "bold"))
     label_msg.place(relx=0.5, rely=0.6, anchor=CENTER)
 
     def changeUserEntryMode():
@@ -296,19 +298,26 @@ def viewData(usernameDataGave):
         dataJSON = json.load(json_file)
     for key in dataJSON["data"]:
         data.append(key)
-    comboxbox_options = ttk.Combobox(root, values=[], font=("@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options = ttk.Combobox(root, values=data, font=("@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
     comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
     try:
         comboxbox_options.current(0)
     except:
         pass
     dataName = comboxbox_options.get()
-    if data != [] and dataName != "":
-        gotdata = dataJSON["data"][dataName]
-    else:
-        messagebox.showerror("No data found", "There is no data name give or there is not data give to us")
-    root.mainloop()
+    textbox = Text(root,font=("calbri",10,"normal"),width=75)
+    textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
+    def viewDataShow():
+        dataShowText = ""
+        dataShowText = dataShowText +f"Data in {dataName}\n"
+        for key in dataJSON["data"][dataName]:
+            dataShowText = dataShowText + f"\t{key} : {dataJSON['data'][dataName][key]}\n"
+        textbox.delete(1.0, END)
+        textbox.insert(END, dataShowText)
+    button_proccessData = Button(root, text="Show data",relief=FLAT ,font=("@Yu Gothic UI Semibold", 20, "normal"), width=20,command=viewDataShow)
+    button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
 
+    root.mainloop()
 
 def deleteData(usernameDataGave):
     pass
@@ -322,4 +331,4 @@ def workWithFiles():
     pass
 
 loginAndSignUp()
-# handlerWhatTo("Hamzah Sajid")
+handlerWhatTo("Hamzah Sajid")

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="de72d5ee-233e-4e4a-a24e-a299e289b5b1" name="Changes" comment="" />
+    <list default="true" id="de72d5ee-233e-4e4a-a24e-a299e289b5b1" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data/Hamzah Sajid/data.json" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Hamzah Sajid/data.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts.json" beforeDir="false" afterPath="$PROJECT_DIR$/accounts.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -67,7 +72,6 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.__main__" />
         <item itemvalue="Python.main" />
       </list>
     </recent_temporary>
@@ -86,6 +90,11 @@
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
+        <entry key="0a1dc916-04d4-4df6-8cc1-2e99ec87faf0">
+          <value>
+            <State />
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State />
