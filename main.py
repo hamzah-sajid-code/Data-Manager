@@ -304,23 +304,76 @@ def viewData(usernameDataGave):
         comboxbox_options.current(0)
     except:
         pass
-    dataName = comboxbox_options.get()
     textbox = Text(root,font=("calbri",10,"normal"),width=75)
     textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
     def viewDataShow():
-        dataShowText = ""
-        dataShowText = dataShowText +f"Data in {dataName}\n"
-        for key in dataJSON["data"][dataName]:
-            dataShowText = dataShowText + f"\t{key} : {dataJSON['data'][dataName][key]}\n"
-        textbox.delete(1.0, END)
-        textbox.insert(END, dataShowText)
+        dataName = comboxbox_options.get()
+        if dataName !="All":
+            dataShowText = ""
+            dataShowText = dataShowText +f"Data in {dataName}\n"
+            for key in dataJSON["data"][dataName]:
+                dataShowText = dataShowText + f"\t{key} : {dataJSON['data'][dataName][key]}\n"
+                textbox.delete(1.0, END)
+                textbox.insert(END, dataShowText)
     button_proccessData = Button(root, text="Show data",relief=FLAT ,font=("@Yu Gothic UI Semibold", 20, "normal"), width=20,command=viewDataShow)
     button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
 
     root.mainloop()
 
 def deleteData(usernameDataGave):
-    pass
+    root = Tk()
+    root.geometry("600x500")
+    root.title("Data Manager")
+    root.configure(bg=color)
+
+    label_Title = Label(root, text="Delete Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    data = []
+    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+        dataJSON = json.load(json_file)
+    for key in dataJSON["data"]:
+        data.append(key)
+    try:
+        comboxbox_options.current(0)
+    except:
+        pass
+    def viewDataDel():
+        dataName = comboxbox_options.get()
+        if dataName != "All":
+            dataShowText = ""
+            dataShowText = dataShowText + f"Data in {dataName}\n"
+            for key in dataJSON["data"][dataName]:
+                dataShowText = dataShowText + \
+                    f"\t{key} : {dataJSON['data'][dataName][key]}\n"
+                textbox.delete(1.0, END)
+                textbox.insert(END, dataShowText)
+    comboxbox_options = ttk.Combobox(root, values=data, font=("@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
+    def callData(event):
+        viewDataDel()
+    comboxbox_options.bind("<<ComboboxSelected>>", callData)
+    textbox = Text(root, font=("calbri", 10, "normal"), width=75,)
+    textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
+
+
+    def deleteDataShow():
+        dataName = comboxbox_options.get()
+        deletedataPrompt = messagebox.showwarning("Delete Data")
+        print(deletedataPrompt)
+        if deletedataPrompt:
+            del dataJSON["data"][dataName]
+            with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
+                json.dump(dataJSON, f)
+            root.destroy()
+            deleteData()
+        else:
+            pass
+
+    button_proccessData = Button(root, text="Delete data", relief=FLAT, font=("@Yu Gothic UI Semibold", 20, "normal"),
+                                 width=20, command=deleteDataShow)
+    button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
+
+    root.mainloop()
 
 
 def exportData(usernameDataGave):
