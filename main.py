@@ -7,6 +7,8 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import filedialog
+import shutil
+import datetime
 import main_functions
 
 color = "#CAF1DE"
@@ -38,14 +40,19 @@ class EntryWithPlaceholder(tk.Entry):
         if not self.get():
             self.put_placeholder()
 
+
 root = Tk()
-label_msg = Label(root, text="", fg="red", bg=color, font=("Arial", 13, "bold"))
+label_msg = Label(root, text="", fg="red", bg=color,
+                  font=("Arial", 13, "bold"))
 userEntryMode = "login"
 button_Login = Button()
+
+
 def loginAndSignUp():
-    global  button_Login
+    global button_Login
     global userEntryMode
     global label_msg
+
     def change(username):
         root.destroy()
         handlerWhatTo(username)
@@ -119,11 +126,13 @@ def loginAndSignUp():
         usernameData = username
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username]
-            decryptedPassword = main_functions.decryptData(username, encryptedPassword)
+            decryptedPassword = main_functions.decryptData(
+                username, encryptedPassword)
             if password == decryptedPassword:
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
-                messagebox.showinfo("Login Successful", "You are now logged in")
+                messagebox.showinfo("Login Successful",
+                                    "You are now logged in")
                 time.sleep(5)
                 change(username)
             else:
@@ -137,7 +146,6 @@ def loginAndSignUp():
             messagebox.showerror("Username not found",
                                  "Username does not exists! Please try again.")
             return username
-
     button_Login["command"] = handle
 
     def signup():
@@ -151,7 +159,8 @@ def loginAndSignUp():
                 label_msg["fg"] = "red"
                 label_msg["text"] = "Username already exists. Please try again."
             else:
-                encryptedPassword = main_functions.encryptText(username, password)
+                encryptedPassword = main_functions.encryptText(
+                    username, password)
                 accountsData["accounts"][username] = encryptedPassword
                 with open('accounts.json', 'w') as outfile:
                     json.dump(accountsData, outfile)
@@ -165,7 +174,6 @@ def loginAndSignUp():
                 messagebox.showinfo("Account created Successful",
                                     "Your account is successfully make now we're logging you in")
                 login()
-
     root.mainloop()
 
 
@@ -177,10 +185,12 @@ def handlerWhatTo(usernameFromData):
 
     root.configure(bg=color)
 
-    label_Title = Label(root, text="Data Manager", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title = Label(root, text="Data Manager", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
 
-    label_whatToDo = Label(root, text="What You Want To Do? ", bg=color, font=("@Yu Gothic UI Semibold", 20, "normal"))
+    label_whatToDo = Label(root, text="What You Want To Do? ", bg=color, font=(
+        "@Yu Gothic UI Semibold", 20, "normal"))
     label_whatToDo.place(relx=0.1, rely=0.2)
 
     label_Choice = ttk.Combobox(values=["Work with data", "Work with files"], state="readonly",
@@ -194,7 +204,7 @@ def handlerWhatTo(usernameFromData):
             workWithData(usernameFromData)
         elif label_Choice.get() == "Work with files":
             root.destroy()
-            workWithFiles()
+            workWithFiles(usernameFromData)
 
     button_go = Button(root, text="Go!", relief="flat", bg="#70CED4", width=30, height=1,
                        font=("@Yu Gothic UI Semibold", 15, "bold"), command=changeScript)
@@ -209,7 +219,8 @@ def workWithData(usernameGave):
     root.title("Data Manager")
     root.configure(bg=color)
 
-    label_Title = Label(root, text="Work With Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title = Label(root, text="Work With Data", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     label_Operations = ttk.Combobox(root, values=["Create Data", "View Data", "Delete Data", "Export Data"],
                                     state="readonly", font=("@Yu Gothic UI Semibold", 15, "normal"))
@@ -237,7 +248,8 @@ def makeData(usernameDataGave):
     root.geometry("600x500")
     root.title("Data Manager")
     root.configure(bg=color)
-    label_Title = Label(root, text="Create Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title = Label(root, text="Create Data", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     label_insrtuction = Label(root, text="Please put the labels and data \" | \" seprated", bg=color,
                               font=("@Yu Gothic UI Semibold", 15, "normal"))
@@ -273,6 +285,8 @@ def makeData(usernameDataGave):
                 dataJSON["data"].update(finalData)
                 with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
+                messagebox.showinfo("Data Successfully stored",
+                                    "We have successfully saved your data!")
             else:
                 messagebox.showerror("Data not given properly",
                                      "Please check if the data give is respectively to the label, there are blank spaces.")
@@ -292,34 +306,40 @@ def viewData(usernameDataGave):
     root.title("Data Manager")
     root.configure(bg=color)
 
-    label_Title = Label(root, text="View Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title = Label(root, text="View Data", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     data = []
     with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
         dataJSON = json.load(json_file)
     for key in dataJSON["data"]:
         data.append(key)
-    comboxbox_options = ttk.Combobox(root, values=data, font=("@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options = ttk.Combobox(root, values=data, font=(
+        "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
     comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
     try:
         comboxbox_options.current(0)
     except:
         pass
-    textbox = Text(root,font=("calbri",10,"normal"),width=75)
+    textbox = Text(root, font=("calbri", 10, "normal"), width=75)
     textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
+
     def viewDataShow():
         dataName = comboxbox_options.get()
-        if dataName !="All":
+        if dataName != "All":
             dataShowText = ""
-            dataShowText = dataShowText +f"Data in {dataName}\n"
+            dataShowText = dataShowText + f"Data in {dataName}\n"
             for key in dataJSON["data"][dataName]:
-                dataShowText = dataShowText + f"\t{key} : {dataJSON['data'][dataName][key]}\n"
+                dataShowText = dataShowText + \
+                    f"\t{key} : {dataJSON['data'][dataName][key]}\n"
                 textbox.delete(1.0, END)
                 textbox.insert(END, dataShowText)
-    button_proccessData = Button(root, text="Show data",relief=FLAT ,font=("@Yu Gothic UI Semibold", 20, "normal"), width=20,command=viewDataShow)
+    button_proccessData = Button(root, text="Show data", relief=FLAT, font=(
+        "@Yu Gothic UI Semibold", 20, "normal"), width=20, command=viewDataShow)
     button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
 
     root.mainloop()
+
 
 def deleteData(usernameDataGave):
     root = Tk()
@@ -327,7 +347,8 @@ def deleteData(usernameDataGave):
     root.title("Data Manager")
     root.configure(bg=color)
 
-    label_Title = Label(root, text="Delete Data", font=("@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title = Label(root, text="Delete Data", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     data = []
     with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
@@ -338,6 +359,7 @@ def deleteData(usernameDataGave):
         comboxbox_options.current(0)
     except:
         pass
+
     def viewDataDel():
         dataName = comboxbox_options.get()
         if dataName != "All" and dataName != "":
@@ -348,18 +370,20 @@ def deleteData(usernameDataGave):
                     f"\t{key} : {dataJSON['data'][dataName][key]}\n"
                 textbox.delete(1.0, END)
                 textbox.insert(END, dataShowText)
-    comboxbox_options = ttk.Combobox(root, values=data, font=("@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options = ttk.Combobox(root, values=data, font=(
+        "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
     comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
+
     def callData(event):
         viewDataDel()
     comboxbox_options.bind("<<ComboboxSelected>>", callData)
     textbox = Text(root, font=("calbri", 10, "normal"), width=75,)
     textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
 
-
     def deleteDataShow():
         dataName = comboxbox_options.get()
-        deletedataPrompt = messagebox.showwarning("Delete Data")
+        deletedataPrompt = messagebox.showwarning(
+            "Delete Data", "Are you sure that you want to delete "+dataName+" ?")
         print(deletedataPrompt)
         if deletedataPrompt:
             del dataJSON["data"][dataName]
@@ -392,7 +416,8 @@ def exportData(usernameDataGave):
         dataJSON = json.load(json_file)
     for key in dataJSON["data"]:
         data.append(key)
-    if len(data) != 0: data.append("All")
+    if len(data) != 0:
+        data.append("All")
     comboxbox_options = ttk.Combobox(root, values=data, font=(
         "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
     comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
@@ -402,6 +427,7 @@ def exportData(usernameDataGave):
         pass
     textbox = Text(root, font=("calbri", 10, "normal"), width=75,)
     textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
+
     def exportDataWork():
         folder = filedialog.askdirectory(title="Select folder")
         dataName = comboxbox_options.get()
@@ -411,11 +437,14 @@ def exportData(usernameDataGave):
                 with open(str(folder) + "\\" + dataName + ".txt", "w") as f:
                     f.write("Your data in " + dataName + ":\n")
                     for key in dataJSON["data"][dataName]:
-                        f.write(key + " : " + dataJSON["data"][dataName][key] + "\n")
+                        f.write(key + " : " +
+                                dataJSON["data"][dataName][key] + "\n")
                     f.close()
-                    messagebox.showinfo("successfully exported data",f"We have successfully exported data of {dataName}")
+                    messagebox.showinfo(
+                        "successfully exported data", f"We have successfully exported data of {dataName}")
             else:
-                messagebox.showerror("Something went wrong please contact our engineers!")
+                messagebox.showerror(
+                    "Something went wrong please contact our engineers!")
         elif dataName != "" and dataName == "All":
             fileName = "All Exported Data.txt"
             if os.path.isfile(folder + "\\" + fileName):
@@ -430,13 +459,15 @@ def exportData(usernameDataGave):
                 print(key)
                 f.write("\nData in " + key + ":\n")
                 for key2 in dataJSON["data"][key]:
-                    f.write("\t"+key2 + " : " + dataJSON["data"][key][key2] + "\n")
+                    f.write("\t"+key2 + " : " +
+                            dataJSON["data"][key][key2] + "\n")
             f.close()
-            messagebox.showinfo("successfully exported data", "We have successfully exported all the data")
+            messagebox.showinfo("successfully exported data",
+                                "We have successfully exported all the data")
     button_proccessData = Button(root, text="Export data", relief=FLAT, font=("@Yu Gothic UI Semibold", 20, "normal"),
                                  width=20, command=exportDataWork)
     button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
-    
+
     def viewDataExport():
         dataName = comboxbox_options.get()
         if dataName != "All" and dataName != "":
@@ -453,17 +484,90 @@ def exportData(usernameDataGave):
             for key in dataJSON["data"]:
                 dataShowText = dataShowText + "\nData in " + key + ":\n"
                 for key2 in dataJSON["data"][key]:
-                    dataShowText = dataShowText + "\t"+key2 + " : " +dataJSON["data"][key][key2] + "\n"
+                    dataShowText = dataShowText + "\t"+key2 + \
+                        " : " + dataJSON["data"][key][key2] + "\n"
             textbox.delete(1.0, END)
             textbox.insert(END, dataShowText)
-            
+
     def callData(event):
         viewDataExport()
     comboxbox_options.bind("<<ComboboxSelected>>", callData)
 
 
-def workWithFiles():
+
+def workWithFiles(usernameGave):
+    if not os.path.exists(str(os.getcwd())+"\\Data\\"+usernameGave+"\\"+"Files"):
+        os.makedirs(str(os.getcwd())+"\Data\\"+usernameGave+"\\"+"Files")
+    else:
+        pass
+
+    root = Tk()
+    root.geometry("600x400")
+    root.title("Data Manager")
+    root.configure(bg=color)
+
+    label_Title = Label(root, text="Work With Data", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    label_Operations = ttk.Combobox(root, values=["Upload File", "View File", "Delete File", "Export File"],
+                                    state="readonly", font=("@Yu Gothic UI Semibold", 15, "normal"))
+    label_Operations.place(relx=0.5, rely=0.25, anchor=CENTER)
+    label_Operations.current(0)
+
+    def changeScreen():
+        if label_Operations.get() == "Upload File":
+            uploadFile(usernameGave)
+        elif label_Operations.get() == "View File":
+            viewFile(usernameGave)
+        elif label_Operations.get() == "Delete File":
+            deleteFile(usernameGave)
+        elif label_Operations.get() == "Export File":
+            exportFile(usernameGave)
+
+    button_Do = Button(root, text="Continue", font=("@Yu Gothic UI Semibold", 13, "normal"), command=changeScreen,
+                       relief="flat", bg="#70CED4", fg="white")
+    button_Do.place(relx=0.5, rely=0.5, anchor=CENTER)
+    root.mainloop()
+
+
+def uploadFile(usernameDataGave):
+    root = Tk()
+    root.geometry("600x300")
+    root.title("Data Manager")
+    root.configure(bg=color)
+
+    label_Title = Label(root, text="Data Manager", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+
+    def saveFile():
+        try:
+            fileNames = filedialog.askopenfilenames(parent=root, title="Select file",)
+            fileNames = list(fileNames)
+            for file in fileNames:
+                orignal = file
+                target = str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\" + "Files\\" + datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")+"_"+os.path.basename(file)
+                shutil.copyfile(orignal,target)
+            messagebox.showinfo("File saved", "We have successfully saved you file/files!")
+        except FileNotFoundError:
+            messagebox.showerror("File not found", "We didn't found the expected file gave by you!")
+    button_uploadFile = Button(root, text="Upload File", relief="flat", font=(
+        "@Yu Gothic UI Semibold", 16, "normal"),command=saveFile)
+    button_uploadFile.place(relx=0.5, rely=0.5, anchor=CENTER)
+    root.mainloop()
+
+
+def viewFile(usernameDataGave):
     pass
 
-loginAndSignUp()
-handlerWhatTo("Hamzah Sajid")
+
+def deleteFile(usernameDataGave):
+    pass
+
+
+def exportFile(usernameDataGave):
+    pass
+
+
+# loginAndSignUp()
+workWithFiles("Hamzah Sajid")
