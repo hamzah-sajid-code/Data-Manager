@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import filedialog
 import main_functions
 
 color = "#CAF1DE"
@@ -281,7 +282,7 @@ def makeData(usernameDataGave):
 
     button_createData = Button(root, text="Create Data", font=("@Yu Gothic UI Semibold", 15, "normal"), relief=FLAT,
                                bg="#70CED4", fg="white", command=makeDataNew)
-    button_createData.place(relx=0.5, rely=0.7)
+    button_createData.place(relx=0.5, rely=0.7, anchor=CENTER)
     root.mainloop()
 
 
@@ -339,7 +340,7 @@ def deleteData(usernameDataGave):
         pass
     def viewDataDel():
         dataName = comboxbox_options.get()
-        if dataName != "All":
+        if dataName != "All" and dataName != "":
             dataShowText = ""
             dataShowText = dataShowText + f"Data in {dataName}\n"
             for key in dataJSON["data"][dataName]:
@@ -365,7 +366,7 @@ def deleteData(usernameDataGave):
             with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                 json.dump(dataJSON, f)
             root.destroy()
-            deleteData()
+            deleteData(usernameDataGave)
         else:
             pass
 
@@ -377,7 +378,88 @@ def deleteData(usernameDataGave):
 
 
 def exportData(usernameDataGave):
-    pass
+    root = Tk()
+    root.geometry("600x500")
+    root.title("Data Manager")
+    root.configure(bg=color)
+    root.eval('tk::PlaceWindow . center')
+
+    label_Title = Label(root, text="Export Data", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    data = []
+    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+        dataJSON = json.load(json_file)
+    for key in dataJSON["data"]:
+        data.append(key)
+    if len(data) != 0: data.append("All")
+    comboxbox_options = ttk.Combobox(root, values=data, font=(
+        "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
+    try:
+        comboxbox_options.current(0)
+    except:
+        pass
+    textbox = Text(root, font=("calbri", 10, "normal"), width=75,)
+    textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
+    def exportDataWork():
+        folder = filedialog.askdirectory(title="Select folder")
+        dataName = comboxbox_options.get()
+        print(dataName)
+        if dataName != "" and dataName != "All":
+            if dataName in dataJSON["data"]:
+                with open(str(folder) + "\\" + dataName + ".txt", "w") as f:
+                    f.write("Your data in " + dataName + ":\n")
+                    for key in dataJSON["data"][dataName]:
+                        f.write(key + " : " + dataJSON["data"][dataName][key] + "\n")
+                    f.close()
+                    messagebox.showinfo("successfully exported data",f"We have successfully exported data of {dataName}")
+            else:
+                messagebox.showerror("Something went wrong please contact our engineers!")
+        elif dataName != "" and dataName == "All":
+            fileName = "All Exported Data.txt"
+            if os.path.isfile(folder + "\\" + fileName):
+                i = 1
+                while os.path.isfile(folder + "\\" + fileName):
+                    fileName, fileExtension = os.path.splitext(fileName)
+                    fileName = fileName + " (" + str(i) + ")" + fileExtension
+                    i += 1
+            f = open(folder + "\\" + fileName, "w")
+            f.write("Your data:")
+            for key in dataJSON["data"]:
+                print(key)
+                f.write("\nData in " + key + ":\n")
+                for key2 in dataJSON["data"][key]:
+                    f.write("\t"+key2 + " : " + dataJSON["data"][key][key2] + "\n")
+            f.close()
+            messagebox.showinfo("successfully exported data", "We have successfully exported all the data")
+    button_proccessData = Button(root, text="Export data", relief=FLAT, font=("@Yu Gothic UI Semibold", 20, "normal"),
+                                 width=20, command=exportDataWork)
+    button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
+    
+    def viewDataExport():
+        dataName = comboxbox_options.get()
+        if dataName != "All" and dataName != "":
+            dataShowText = ""
+            dataShowText = dataShowText + f"Data in {dataName}\n"
+            for key in dataJSON["data"][dataName]:
+                dataShowText = dataShowText + \
+                    f"\t{key} : {dataJSON['data'][dataName][key]}\n"
+                textbox.delete(1.0, END)
+                textbox.insert(END, dataShowText)
+        elif dataName == "All" and dataName != "":
+            dataShowText = ""
+            dataShowText = dataShowText + "Your data:"
+            for key in dataJSON["data"]:
+                dataShowText = dataShowText + "\nData in " + key + ":\n"
+                for key2 in dataJSON["data"][key]:
+                    dataShowText = dataShowText + "\t"+key2 + " : " +dataJSON["data"][key][key2] + "\n"
+            textbox.delete(1.0, END)
+            textbox.insert(END, dataShowText)
+            
+    def callData(event):
+        viewDataExport()
+    comboxbox_options.bind("<<ComboboxSelected>>", callData)
 
 
 def workWithFiles():
