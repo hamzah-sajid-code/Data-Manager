@@ -12,7 +12,7 @@
   </a>
 </p>
 
-> This an command line app that can store your data and organize it in a safe place. Currently we are developing GUI of this app
+> This an GUI app that can store your data and organize it in a safe place.
 
 ### 🏠 [Homepage](https://github.com/hamzah-sajid-code/Data-Manager)
 
