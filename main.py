@@ -56,7 +56,7 @@ def incrementFile(destinationPath, fileNameJust):
 if os.path.isfile('accounts.json'):
     pass
 else:
-    os.system('echo {"data":{}} > accounts.json')
+    os.system('echo {"accounts":{}} > accounts.json')
 
 def loginAndSignUp():
     root = Tk()
