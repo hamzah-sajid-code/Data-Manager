@@ -47,6 +47,10 @@ label_msg = Label(root, text="", fg="red", bg=color,
 userEntryMode = "login"
 button_Login = Button()
 
+if os.path.isfile('accounts.json'):
+    pass
+else:
+    os.system('echo {"data":{}} > accounts.json')
 
 def loginAndSignUp():
     global button_Login
@@ -506,7 +510,7 @@ def workWithFiles(usernameGave):
     root.title("Data Manager")
     root.configure(bg=color)
 
-    label_Title = Label(root, text="Work With Data", font=(
+    label_Title = Label(root, text="Work With File", font=(
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     label_Operations = ttk.Combobox(root, values=["Upload File", "View File", "Delete File", "Export File"],
@@ -530,6 +534,18 @@ def workWithFiles(usernameGave):
     root.mainloop()
 
 
+def incrementFile(destinationPath, fileNameJust):
+    if os.path.isfile(destinationPath+"\\"+fileNameJust):
+        i = 1
+        while os.path.isfile(destinationPath+"\\"+fileNameJust):
+            fileNameJust, fileExtension = os.path.splitext(fileNameJust)
+            if f"({i-1})" in fileNameJust:
+                fileNameJust = fileNameJust[:-4]+" ("+str(i)+")"+fileExtension
+            else:
+                fileNameJust = fileNameJust+" ("+str(i)+")"+fileExtension
+            i += 1
+    return destinationPath + "\\"+fileNameJust
+
 def uploadFile(usernameDataGave):
     root = Tk()
     root.geometry("600x300")
@@ -544,11 +560,16 @@ def uploadFile(usernameDataGave):
         try:
             fileNames = filedialog.askopenfilenames(parent=root, title="Select file",)
             fileNames = list(fileNames)
-            for file in fileNames:
-                orignal = file
-                target = str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\" + "Files\\" + datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")+"_"+os.path.basename(file)
-                shutil.copyfile(orignal,target)
-            messagebox.showinfo("File saved", "We have successfully saved you file/files!")
+            if fileNames != []:
+                for file in fileNames:
+                    orignal = file
+                    target = incrementFile(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\" + "Files\\", os.path.basename(file))
+
+                    # target = str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\" + "Files\\" + os.path.basename(file)
+                    shutil.copyfile(orignal,target)
+                messagebox.showinfo("File saved", "We have successfully saved you file/files!")
+            else:
+                messagebox.showerror("File not gave", "You have not provided us with the file.")
         except FileNotFoundError:
             messagebox.showerror("File not found", "We didn't found the expected file gave by you!")
     button_uploadFile = Button(root, text="Upload File", relief="flat", font=(
@@ -558,11 +579,100 @@ def uploadFile(usernameDataGave):
 
 
 def viewFile(usernameDataGave):
-    pass
+    root = Tk()
+    root.geometry("600x300")
+    root.title("Data Manager")
+    root.configure(bg=color)
+
+    label_Title = Label(root, text="Data Manager", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    fileData = []
+    for file in os.listdir(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files"):
+        fileData.append(file)
+    if len(fileData) != 0:
+        fileData.append("All")
+    comboxbox_options = ttk.Combobox(root, values=fileData, font=(
+        "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options.place(relx=0.5, rely=0.35, anchor=CENTER)
+    try:
+        comboxbox_options.current(0)
+    except:
+        pass
+    def viewFileWork():
+        fileNameGot = comboxbox_options.get()
+        if fileNameGot != "" and fileNameGot != "All":
+            os.startfile(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files\\" +fileNameGot)
+        elif fileNameGot == "" and fileNameGot == "All":
+            for x in fileData:
+                os.startfile(str(os.getcwd())+"\Data\\" + usernameDataGave+"\\"+"Files\\" + x)
+    button_uploadFile = Button(root, text="View File", relief="flat", font=(
+        "@Yu Gothic UI Semibold", 16, "normal"), command=viewFileWork)
+    button_uploadFile.place(relx=0.5, rely=0.6, anchor=CENTER)
+    root.mainloop()
 
 
 def deleteFile(usernameDataGave):
-    pass
+    root = Tk()
+    root.geometry("600x300")
+    root.title("Data Manager")
+    root.configure(bg=color)
+
+    label_Title = Label(root, text="Data Manager", font=(
+        "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
+    label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
+    fileData = []
+    for file in os.listdir(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files"):
+        fileData.append(file)
+    if len(fileData) != 0:
+        fileData.append("All")
+    comboxbox_options = ttk.Combobox(root, values=fileData, font=(
+        "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
+    comboxbox_options.place(relx=0.5, rely=0.35, anchor=CENTER)
+    try:
+        comboxbox_options.current(0)
+    except:
+        pass
+
+    def deleteFileWork():
+        dataName = comboxbox_options.get()
+        deletedataPrompt = messagebox.showwarning("Delete Data", "Are you sure that you want to delete "+dataName+" ?")
+        try:
+            if dataName != "" and dataName != "All":
+                if deletedataPrompt:
+                    os.remove(str(os.getcwd())+"\Data\\" +
+                            usernameDataGave+"\\"+"Files\\" + dataName)
+                    messagebox.showinfo("Successfully Delete", "We have successfully deleted the file")
+                    root.destroy()
+                    deleteFile(usernameDataGave)
+                else:
+                    pass
+            elif dataName != "" and dataName == "All":
+                for x in os.listdir(str(os.getcwd())+"\Data\\" + usernameDataGave+"\\"+"Files\\"):
+                    os.remove(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + x)
+                messagebox.showinfo("Successfully Delete","We have successfully deleted the file")
+                root.destroy()
+                deleteFile(usernameDataGave)
+
+        except:
+            pass
+
+    def viewdeleteFileWork():
+        fileNameGot = comboxbox_options.get()
+        if fileNameGot != "" and fileNameGot != "All":
+            os.startfile(str(os.getcwd())+"\Data\\" +
+                         usernameDataGave+"\\"+"Files\\" + fileNameGot)
+        elif fileNameGot == "" and fileNameGot == "All":
+            for x in fileData:
+                os.startfile(str(os.getcwd())+"\Data\\" +
+                             usernameDataGave+"\\"+"Files\\" + x)
+    button_uploadFile = Button(root, text="Delete File", relief="flat", font=(
+        "@Yu Gothic UI Semibold", 16, "normal"), command=deleteFileWork)
+    button_uploadFile.place(relx=0.2, rely=0.6)
+    button_showGoingToDeleteFile = Button(root, text="Show File", relief=FLAT,font=(
+        "@Yu Gothic UI Semibold", 16, "normal"), command=viewdeleteFileWork)
+    button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
+    root.mainloop()
 
 
 def exportFile(usernameDataGave):
