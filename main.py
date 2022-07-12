@@ -400,17 +400,17 @@ def deleteData(usernameDataGave):
 
     def deleteDataShow():
         dataName = comboxbox_options.get()
-        deletedataPrompt = messagebox.showwarning(
-            "Delete Data", "Are you sure that you want to delete "+dataName+" ?")
+        deletedataPrompt = messagebox.askyesno("Delete Data", "Are you sure that you want to delete "+dataName+" ?")
         print(deletedataPrompt)
         if deletedataPrompt:
+            print(deletedataPrompt)
             if dataName != "All":
                 del dataJSON["data"][dataName]
                 with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
                 root.destroy()
                 deleteData(usernameDataGave)
-            elif dataName == "All":
+            else:
                 dataJSON = {"data":{}}
                 with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
@@ -598,7 +598,7 @@ def viewFile(usernameDataGave):
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     fileData = []
-    for file in os.listdir(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files"):
+    for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
     if len(fileData) != 0:
         fileData.append("All")
@@ -613,11 +613,11 @@ def viewFile(usernameDataGave):
         fileNameGot = comboxbox_options.get()
         if fileNameGot != "" and fileNameGot != "All":
             os.startfile(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files\\" +fileNameGot)
-        elif fileNameGot == "" and fileNameGot == "All":
+        elif fileNameGot != "" and fileNameGot == "All":
             for x in fileData:
-                os.startfile(str(os.getcwd())+"\Data\\" + usernameDataGave+"\\"+"Files\\" + x)
-    button_uploadFile = Button(root, text="View File", relief="flat", font=(
-        "@Yu Gothic UI Semibold", 16, "normal"), command=viewFileWork)
+                if x != "All":
+                    os.startfile(str(os.getcwd())+"\\Data\\" + usernameDataGave+"\\"+"Files\\" + x)
+    button_uploadFile = Button(root, text="View File", relief="flat", font=("@Yu Gothic UI Semibold", 16, "normal"), command=viewFileWork)
     button_uploadFile.place(relx=0.5, rely=0.6, anchor=CENTER)
     root.mainloop()
 
@@ -646,7 +646,7 @@ def deleteFile(usernameDataGave):
 
     def deleteFileWork():
         dataName = comboxbox_options.get()
-        deletedataPrompt = messagebox.showwarning("Delete Data", "Are you sure that you want to delete "+dataName+" ?")
+        deletedataPrompt = messagebox.askyesno("Delete Data", "Are you sure that you want to delete "+dataName+" ?")
         try:
             if dataName != "" and dataName != "All":
                 if deletedataPrompt:
@@ -657,7 +657,7 @@ def deleteFile(usernameDataGave):
                     deleteFile(usernameDataGave)
                 else:
                     pass
-            elif dataName != "" and dataName == "All":
+            elif dataName != "" and dataName == "All" and deletedataPrompt:
                 for x in os.listdir(str(os.getcwd())+"\Data\\" + usernameDataGave+"\\"+"Files\\"):
                     os.remove(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + x)
                 messagebox.showinfo("Successfully Delete","We have successfully deleted the file")
@@ -670,17 +670,13 @@ def deleteFile(usernameDataGave):
     def viewdeleteFileWork():
         fileNameGot = comboxbox_options.get()
         if fileNameGot != "" and fileNameGot != "All":
-            os.startfile(str(os.getcwd())+"\Data\\" +
-                         usernameDataGave+"\\"+"Files\\" + fileNameGot)
-        elif fileNameGot == "" and fileNameGot == "All":
+            os.startfile(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + fileNameGot)
+        elif fileNameGot != "" and fileNameGot == "All":
             for x in fileData:
-                os.startfile(str(os.getcwd())+"\Data\\" +
-                             usernameDataGave+"\\"+"Files\\" + x)
-    button_uploadFile = Button(root, text="Delete File", relief="flat", font=(
-        "@Yu Gothic UI Semibold", 16, "normal"), command=deleteFileWork)
+                os.startfile(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + x)
+    button_uploadFile = Button(root, text="Delete File", relief="flat", font=("@Yu Gothic UI Semibold", 16, "normal"), command=deleteFileWork)
     button_uploadFile.place(relx=0.2, rely=0.6)
-    button_showGoingToDeleteFile = Button(root, text="Show File", relief=FLAT,font=(
-        "@Yu Gothic UI Semibold", 16, "normal"), command=viewdeleteFileWork)
+    button_showGoingToDeleteFile = Button(root, text="Show File", relief=FLAT,font=("@Yu Gothic UI Semibold", 16, "normal"), command=viewdeleteFileWork)
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
     root.mainloop()
 
@@ -744,6 +740,5 @@ def exportFile(usernameDataGave):
         "@Yu Gothic UI Semibold", 16, "normal"), command=viewdeleteFileWork)
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
     root.mainloop()
-
 
 loginAndSignUp()
