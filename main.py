@@ -58,11 +58,11 @@ if os.path.isfile('accounts.json'):
 else:
     os.system('echo {"accounts":{}} > accounts.json')
 
+userEntryMode = "login"
 def loginAndSignUp():
     root = Tk()
     label_msg = Label(root, text="", fg="red", bg=color,
                     font=("Arial", 13, "bold"))
-    userEntryMode = "login"
     button_Login = Button()
 
     def change(username):
@@ -103,6 +103,7 @@ def loginAndSignUp():
     label_msg.place(relx=0.5, rely=0.6, anchor=CENTER)
 
     def changeUserEntryMode():
+        global userEntryMode
         if userEntryMode == "login":
             userEntryMode = "signup"
             button_Login["text"] = "Sign Up"
@@ -127,8 +128,6 @@ def loginAndSignUp():
         accountsData = json.load(json_file)
 
     def login():
-        global usernameData
-        global label_msg
         username = input_Username.get()
         password = input_Password.get()
         usernameData = username
@@ -157,8 +156,6 @@ def loginAndSignUp():
     button_Login["command"] = handle
 
     def signup():
-        global label_msg
-        global usernameData
         username = input_Username.get()
         password = input_Password.get()
         usernameData = username
