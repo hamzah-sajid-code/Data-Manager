@@ -9,7 +9,6 @@ from tkinter import ttk
 from tkinter import filedialog
 import shutil
 import datetime
-import main_functions
 
 color = "#CAF1DE"
 
