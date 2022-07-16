@@ -133,14 +133,11 @@ def loginAndSignUp():
         usernameData = username
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username]
-            decryptedPassword = main_functions.decryptData(
-                username, encryptedPassword)
+            decryptedPassword = encryptedPassword
             if password == decryptedPassword:
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
-                messagebox.showinfo("Login Successful",
-                                    "You are now logged in")
-                time.sleep(5)
+                messagebox.showinfo("Login Successful","You are now logged in")
                 change(username)
             else:
                 label_msg["fg"] = "red"
@@ -164,8 +161,7 @@ def loginAndSignUp():
                 label_msg["fg"] = "red"
                 label_msg["text"] = "Username already exists. Please try again."
             else:
-                encryptedPassword = main_functions.encryptText(
-                    username, password)
+                encryptedPassword = password
                 accountsData["accounts"][username] = encryptedPassword
                 with open('accounts.json', 'w') as outfile:
                     json.dump(accountsData, outfile)
