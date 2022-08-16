@@ -89,7 +89,6 @@ else:
 
 userEntryMode = "login"
 
-
 def loginAndSignUp():
     root = Tk()
     label_msg = Label(root, text="", fg="red", bg=color,
