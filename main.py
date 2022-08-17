@@ -32,7 +32,7 @@ def DataManage(key, string, do="encryption"):
     if do == "encryption":
         string = string.encode()
         encrypted = fernetKey.encrypt(string)
-        return encrypted
+        return str(encrypted.decode())
     elif do == "decryption":
         if type(string) == bytes:
             pass
@@ -244,7 +244,6 @@ def handlerWhatTo(usernameFromData):
 
     root.mainloop()
 
-
 def workWithData(usernameGave):
     root = Tk()
     root.geometry("600x400")
@@ -407,12 +406,29 @@ def deleteData(usernameDataGave):
     label_Title = Label(root, text="Delete Data", font=(
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
-    data = []
     with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
         dataJSON = json.load(json_file)
-    for key in dataJSON["data"]:
+    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+        accountsJSON = json.load(json_file)
+    
+    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+    # Decryption Data
+    mainData = {"data": {}}
+    for keyData in dataJSON["data"]:
+        dataNameKey = []
+        dataNameData = []
+        realkeyData = DataManage(keyEncryptor, keyData, do="decryption")
+        for dataGotKey in dataJSON["data"][keyData]:
+
+            dataNameKey.append(DataManage(keyEncryptor, dataGotKey, do="decryption"))
+            dataNameData.append(DataManage(
+                keyEncryptor, dataJSON["data"][keyData][dataGotKey], do="decryption"))
+        mainData["data"][realkeyData] = dict(zip(dataNameKey, dataNameData))
+
+    data = []
+    for key in mainData["data"]:
         data.append(key)
-    if len(data) != 0:
+    if len(data) > 1:
         data.append("All")
 
     comboxbox_options = ttk.Combobox(root, values=data, font=(
@@ -430,18 +446,18 @@ def deleteData(usernameDataGave):
         if dataName != "All" and dataName != "":
             dataShowText = ""
             dataShowText = dataShowText + f"Data in {dataName}\n"
-            for key in dataJSON["data"][dataName]:
+            for key in mainData["data"][dataName]:
                 dataShowText = dataShowText + \
-                    f"\t{key} : {dataJSON['data'][dataName][key]}\n"
+                    f"\t{key} : {mainData['data'][dataName][key]}\n"
                 textbox.delete(1.0, END)
                 textbox.insert(END, dataShowText)
         elif dataName != "" and dataName == "All":
             dataShowText = "Data:"
-            for key in dataJSON["data"]:
+            for key in mainData["data"]:
                 dataShowText = dataShowText + "\nData in " + key + ":\n"
-                for key2 in dataJSON["data"][key]:
+                for key2 in mainData["data"][key]:
                     dataShowText = dataShowText + "\t"+key2 + \
-                        " : " + dataJSON["data"][key][key2] + "\n"
+                        " : " + mainData["data"][key][key2] + "\n"
             textbox.delete(1.0, END)
             textbox.insert(END, dataShowText)
     if len(data) != 0:
@@ -453,13 +469,27 @@ def deleteData(usernameDataGave):
 
     def deleteDataShow():
         dataName = comboxbox_options.get()
-        deletedataPrompt = messagebox.askyesno(
-            "Delete Data", "Are you sure that you want to delete "+dataName+" ?")
+        deletedataPrompt = messagebox.askyesno("Delete Data", "Are you sure that you want to delete "+dataName+" ?")
         print(deletedataPrompt)
         if deletedataPrompt:
             print(deletedataPrompt)
             if dataName != "All":
-                del dataJSON["data"][dataName]
+                indexOfKey = list(mainData["data"]).index(dataName)
+                dictDataKey = list(mainData["data"])[indexOfKey]
+                dataJSON = {"data":{}}
+                del mainData["data"][dictDataKey]
+
+                # Encryption Data
+                for keyDataE in mainData["data"]:
+                    dataNameKey = []
+                    dataNameData = []
+                    realkeyData = DataManage(keyEncryptor, keyDataE, do="encryption")
+                    for dataGotKey in mainData["data"][keyDataE]:
+
+                        dataNameKey.append(DataManage(keyEncryptor, dataGotKey, do="encryption"))
+                        dataNameData.append(DataManage(keyEncryptor, mainData["data"][keyDataE][dataGotKey], do="encryption"))
+                    dataJSON["data"][realkeyData] = dict(zip(dataNameKey, dataNameData))
+
                 with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
                 root.destroy()
@@ -487,7 +517,7 @@ def exportData(usernameDataGave):
     root.geometry("600x500")
     root.title("Data Manager")
     root.configure(bg=color)
-    root.eval('tk::PlaceWindow . center')
+    # root.eval('tk::PlaceWindow . center')
 
     label_Title = Label(root, text="Export Data", font=(
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
@@ -495,9 +525,25 @@ def exportData(usernameDataGave):
     data = []
     with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
         dataJSON = json.load(json_file)
-    for key in dataJSON["data"]:
+    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+        accountsJSON = json.load(json_file)
+    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+    # Decryption Data
+    mainData = {"data": {}}
+    for keyData in dataJSON["data"]:
+        dataNameKey = []
+        dataNameData = []
+        realkeyData = DataManage(keyEncryptor, keyData, do="decryption")
+        for dataGotKey in dataJSON["data"][keyData]:
+
+            dataNameKey.append(DataManage(
+                keyEncryptor, dataGotKey, do="decryption"))
+            dataNameData.append(DataManage(
+                keyEncryptor, dataJSON["data"][keyData][dataGotKey], do="decryption"))
+        mainData["data"][realkeyData] = dict(zip(dataNameKey, dataNameData))
+    for key in mainData["data"]:
         data.append(key)
-    if len(data) != 0:
+    if len(data) > 1:
         data.append("All")
     comboxbox_options = ttk.Combobox(root, values=data, font=(
         "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
@@ -513,15 +559,15 @@ def exportData(usernameDataGave):
         folder = filedialog.askdirectory(title="Select folder")
         dataName = comboxbox_options.get()
         if dataName != "" and dataName != "All":
-            if dataName in dataJSON["data"]:
+            if dataName in mainData["data"]:
                 dataName2 = dataName + ".txt"
                 endDestination = incrementFile(str(folder), dataName2)
                 print(endDestination)
                 with open(endDestination, "w") as f:
                     f.write("Your data in " + dataName + ":\n")
-                    for key in dataJSON["data"][dataName]:
-                        f.write(key + " : " +
-                                dataJSON["data"][dataName][key] + "\n")
+                    for key in mainData["data"][dataName]:
+                        f.write("\t"+key + " : " +
+                                mainData["data"][dataName][key] + "\n")
                     f.close()
                     messagebox.showinfo(
                         "successfully exported data", f"We have successfully exported data of {dataName}")
@@ -533,12 +579,12 @@ def exportData(usernameDataGave):
             finalDest = incrementFile(folder, fileName)
             f = open(finalDest, "w")
             f.write("Your data:")
-            for key in dataJSON["data"]:
+            for key in mainData["data"]:
                 print(key)
                 f.write("\nData in " + key + ":\n")
-                for key2 in dataJSON["data"][key]:
+                for key2 in mainData["data"][key]:
                     f.write("\t"+key2 + " : " +
-                            dataJSON["data"][key][key2] + "\n")
+                            mainData["data"][key][key2] + "\n")
             f.close()
             messagebox.showinfo("successfully exported data",
                                 "We have successfully exported all the data")
@@ -551,19 +597,19 @@ def exportData(usernameDataGave):
         if dataName != "All" and dataName != "":
             dataShowText = ""
             dataShowText = dataShowText + f"Data in {dataName}\n"
-            for key in dataJSON["data"][dataName]:
+            for key in mainData["data"][dataName]:
                 dataShowText = dataShowText + \
-                    f"\t{key} : {dataJSON['data'][dataName][key]}\n"
+                    f"\t{key} : {mainData['data'][dataName][key]}\n"
                 textbox.delete(1.0, END)
                 textbox.insert(END, dataShowText)
         elif dataName == "All" and dataName != "":
             dataShowText = ""
             dataShowText = dataShowText + "Your data:"
-            for key in dataJSON["data"]:
+            for key in mainData["data"]:
                 dataShowText = dataShowText + "\nData in " + key + ":\n"
-                for key2 in dataJSON["data"][key]:
+                for key2 in mainData["data"][key]:
                     dataShowText = dataShowText + "\t"+key2 + \
-                        " : " + dataJSON["data"][key][key2] + "\n"
+                        " : " + mainData["data"][key][key2] + "\n"
             textbox.delete(1.0, END)
             textbox.insert(END, dataShowText)
     if len(data) != 0:
@@ -572,7 +618,9 @@ def exportData(usernameDataGave):
     def callData(event):
         viewDataExport()
     comboxbox_options.bind("<<ComboboxSelected>>", callData)
+    root.mainloop()
 
+# Work with file
 
 def workWithFiles(usernameGave):
     if not os.path.exists(str(os.getcwd())+"\\Data\\"+usernameGave+"\\"+"Files"):
@@ -821,6 +869,11 @@ def exportFile(usernameDataGave):
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
     root.mainloop()
 
+exportData("Hamzah Sajid")
+# deleteData("Hamzah Sajid")
 # makeData("Hamzah Sajid")
-viewData("Hamzah Sajid")
+# viewData("Hamzah Sajid")
 # loginAndSignUp()
+
+# TODO: In view data feature, when the user selects an item then it will auto show the data like in delete and export data
+# TODO: Add a listener which always see if the data.json file have changed or not if it is then reload the json file
