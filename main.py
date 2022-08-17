@@ -11,9 +11,9 @@ import shutil
 import datetime
 import hashlib
 from cryptography.fernet import Fernet
+import threading
 
 color = "#CAF1DE"
-
 
 def SHA512(data):
     sha256Form = hashlib.sha512(data.encode()).hexdigest()
@@ -79,7 +79,7 @@ def incrementFile(destinationPath, fileNameJust):
             else:
                 fileNameJust = fileNameJust+" ("+str(i)+")"+fileExtension
             i += 1
-    return destinationPath + "\\"+fileNameJust
+    return destinationPath +"\\"+ fileNameJust.replace("\\", "")
 
 
 if os.path.isfile('accounts.json'):
@@ -88,6 +88,7 @@ else:
     os.system('echo {"accounts":{}} > accounts.json')
 
 userEntryMode = "login"
+userName = ""
 
 def loginAndSignUp():
     root = Tk()
@@ -102,8 +103,6 @@ def loginAndSignUp():
     root.title("Data Manager")
     root.geometry("600x500")
     root.configure(bg="#CAF1DE")
-
-    usernameData = ""
 
     label_Title = Label(root, text="Data Manager", bg=color,
                         font=("@Yu Gothic UI Semibold", 20, "normal"))
@@ -158,27 +157,29 @@ def loginAndSignUp():
         accountsData = json.load(json_file)
 
     def login():
+        global userName
         username = input_Username.get()
         password = input_Password.get()
-        usernameData = username
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username][0]
             if encryptedPassword == SHA512(password):
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
-                messagebox.showinfo("Login Successful",
-                                    "You are now logged in")
+                messagebox.showinfo("Login Successful","You are now logged in")
+                
+                userName = username
                 change(username)
             else:
                 label_msg["fg"] = "red"
                 label_msg["text"] = "Username password is wrong! Please try again."
-                messagebox.showerror(
-                    "Wrong password", "Username password is wrong! Please try again.")
+                messagebox.showerror("Wrong password", "Username password is wrong! Please try again.")
+                
         else:
             label_msg["fg"] = "red"
             label_msg["text"] = "Username does not exists! Please try again."
             messagebox.showerror("Username not found",
                                  "Username does not exists! Please try again.")
+            
             return username
     button_Login["command"] = handle
 
@@ -205,6 +206,7 @@ def loginAndSignUp():
                 label_msg["text"] = "Account Successful created"
                 messagebox.showinfo("Account created Successful",
                                     "Your account is successfully make now we're logging you in")
+                
                 login()
     root.mainloop()
 
@@ -267,12 +269,16 @@ def workWithData(usernameGave):
 
     def changeScreen():
         if label_Operations.get() == "Create Data":
+            root.wm_state('iconic')
             makeData(usernameGave)
         elif label_Operations.get() == "View Data":
+            root.wm_state('iconic')
             viewData(usernameGave)
         elif label_Operations.get() == "Delete Data":
+            root.wm_state('iconic')
             deleteData(usernameGave)
         elif label_Operations.get() == "Export Data":
+            root.wm_state('iconic')
             exportData(usernameGave)
 
     button_Do = Button(root, text="Continue", font=("@Yu Gothic UI Semibold", 13, "normal"), command=changeScreen,
@@ -312,11 +318,11 @@ def makeData(usernameDataGave):
     key = accountsJSON["accounts"][usernameDataGave][1]
     def makeDataNew():
         nameDataIn = input_DataName.get()
-        nameDataIn = DataManage(key, nameDataIn, do="encryption").decode()
+        nameDataIn = DataManage(key, nameDataIn, do="encryption")
         labelIn = input_Labels.get().split(" | ")
-        labelIn = [(DataManage(key,x,do="encryption")).decode() for x in labelIn]
+        labelIn = [(DataManage(key,x,do="encryption")) for x in labelIn]
         dataIn = input_data.get().split(" | ")
-        dataIn = [(DataManage(key, y, do="encryption")).decode() for y in dataIn]
+        dataIn = [(DataManage(key, y, do="encryption")) for y in dataIn]
         if nameDataIn != "" and len(labelIn) != 0 and len(dataIn) != 0:
             if len(labelIn) == len(labelIn):
                 finalData = {}
@@ -325,15 +331,18 @@ def makeData(usernameDataGave):
                 dataJSON["data"].update(finalData)
                 with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
+                
                 messagebox.showinfo("Data Successfully stored",
                                     "We have successfully saved your data!")
+
             else:
+                
                 messagebox.showerror("Data not given properly",
                                      "Please check if the data give is respectively to the label, there are blank spaces.")
         else:
+            
             messagebox.showerror("Data not given properly",
                                  "Please check if the data name is not empty and the label and data are not empty")
-
     button_createData = Button(root, text="Create Data", font=("@Yu Gothic UI Semibold", 15, "normal"), relief=FLAT,
                                bg="#70CED4", fg="white", command=makeDataNew)
     button_createData.place(relx=0.5, rely=0.7, anchor=CENTER)
@@ -390,10 +399,10 @@ def viewData(usernameDataGave):
                     f"\t{keyInDataDict} : {mainData['data'][dataName][keyInDataDict]}\n"
                 textbox.delete(1.0, END)
                 textbox.insert(END, dataShowText)
-    button_proccessData = Button(root, text="Show data", relief=FLAT, font=(
-        "@Yu Gothic UI Semibold", 20, "normal"), width=20, command=viewDataShow)
-    button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
-
+    viewDataShow()
+    def callData(event):
+        viewDataShow()
+    comboxbox_options.bind("<<ComboboxSelected>>", callData)
     root.mainloop()
 
 
@@ -469,8 +478,8 @@ def deleteData(usernameDataGave):
 
     def deleteDataShow():
         dataName = comboxbox_options.get()
+        
         deletedataPrompt = messagebox.askyesno("Delete Data", "Are you sure that you want to delete "+dataName+" ?")
-        print(deletedataPrompt)
         if deletedataPrompt:
             print(deletedataPrompt)
             if dataName != "All":
@@ -510,6 +519,7 @@ def deleteData(usernameDataGave):
     button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
 
     root.mainloop()
+
 
 
 def exportData(usernameDataGave):
@@ -556,6 +566,7 @@ def exportData(usernameDataGave):
     textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
 
     def exportDataWork():
+        
         folder = filedialog.askdirectory(title="Select folder")
         dataName = comboxbox_options.get()
         if dataName != "" and dataName != "All":
@@ -569,9 +580,12 @@ def exportData(usernameDataGave):
                         f.write("\t"+key + " : " +
                                 mainData["data"][dataName][key] + "\n")
                     f.close()
+                    
                     messagebox.showinfo(
                         "successfully exported data", f"We have successfully exported data of {dataName}")
+
             else:
+                
                 messagebox.showerror(
                     "Something went wrong please contact our engineers!")
         elif dataName != "" and dataName == "All":
@@ -586,8 +600,10 @@ def exportData(usernameDataGave):
                     f.write("\t"+key2 + " : " +
                             mainData["data"][key][key2] + "\n")
             f.close()
+            
             messagebox.showinfo("successfully exported data",
                                 "We have successfully exported all the data")
+
     button_proccessData = Button(root, text="Export data", relief=FLAT, font=("@Yu Gothic UI Semibold", 20, "normal"),
                                  width=20, command=exportDataWork)
     button_proccessData.place(relx=0.5, rely=0.9, anchor=CENTER)
@@ -622,6 +638,38 @@ def exportData(usernameDataGave):
 
 # Work with file
 
+
+def FileManage(keyUse, file_loc, action="encryption", change_name="no"):
+    if action == "encryption":
+        keyFernet = Fernet(keyUse)
+        with open(file_loc, "rb") as file:
+            data = file.read()
+        encrypted_data = keyFernet.encrypt(data)
+
+        with open(file_loc, "wb") as file:
+            file.write(encrypted_data)
+        if change_name != "no":
+            encrypted_name = DataManage(keyUse, str(os.path.basename(file_loc)))
+            os.rename(file_loc, os.path.dirname(os.path.realpath(file_loc))+ "\\"+encrypted_name)
+
+    elif action == "decryption":
+        keyFernet = Fernet(keyUse)
+        with open(file_loc, "rb") as file:
+            encrypted_data = file.read()
+        decrypted_data = keyFernet.decrypt(encrypted_data)
+
+        with open(file_loc, "wb") as file:
+            file.write(decrypted_data)
+        if change_name != "no":
+            decrypted_name = DataManage(keyUse, str(os.path.basename(file_loc)), do="decryption")
+            os.rename(file_loc, os.path.dirname(os.path.realpath(file_loc))
+                      + "\\"+decrypted_name)
+    elif action == "showrealname":
+        keyFernet = Fernet(keyUse)
+        decrypted_name = DataManage(keyUse, str(os.path.basename(file_loc)), do="decryption")
+        return decrypted_name
+
+
 def workWithFiles(usernameGave):
     if not os.path.exists(str(os.getcwd())+"\\Data\\"+usernameGave+"\\"+"Files"):
         os.makedirs(str(os.getcwd())+"\Data\\"+usernameGave+"\\"+"Files")
@@ -650,12 +698,16 @@ def workWithFiles(usernameGave):
 
     def changeScreen():
         if label_Operations.get() == "Upload File":
+            root.wm_state('iconic')
             uploadFile(usernameGave)
         elif label_Operations.get() == "View File":
+            root.wm_state('iconic')
             viewFile(usernameGave)
         elif label_Operations.get() == "Delete File":
+            root.wm_state('iconic')
             deleteFile(usernameGave)
         elif label_Operations.get() == "Export File":
+            root.wm_state('iconic')
             exportFile(usernameGave)
 
     button_Do = Button(root, text="Continue", font=("@Yu Gothic UI Semibold", 13, "normal"), command=changeScreen,
@@ -675,24 +727,30 @@ def uploadFile(usernameDataGave):
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
 
     def saveFile():
+        with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+            accountsJSON = json.load(json_file)
+        keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
         try:
-            fileNames = filedialog.askopenfilenames(
-                parent=root, title="Select file",)
+            
+            fileNames = filedialog.askopenfilenames(parent=root, title="Select file",)
+            print(fileNames)
             fileNames = list(fileNames)
             if fileNames != []:
                 for file in fileNames:
                     orignal = file
-                    target = incrementFile(str(
-                        os.getcwd())+"\\Data\\"+usernameDataGave+"\\" + "Files\\", os.path.basename(file))
-                    shutil.copyfile(orignal, target)
-                messagebox.showinfo(
-                    "File saved", "We have successfully saved you file/files!")
+                    target = incrementFile(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\" + "Files\\",os.path.basename(file))
+                    shutil.copy(orignal, target)
+                    FileManage(keyEncryptor, target)
+                
+                messagebox.showinfo("File saved", "We have successfully saved you file/files!")
             else:
+                
                 messagebox.showerror(
                     "File not gave", "You have not provided us with the file.")
         except FileNotFoundError:
-            messagebox.showerror(
-                "File not found", "We didn't found the expected file gave by you!")
+            
+            messagebox.showerror("File not found", "We didn't found the expected file gave by you!")
+
     button_uploadFile = Button(root, text="Upload File", relief="flat", font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=saveFile)
     button_uploadFile.place(relx=0.5, rely=0.5, anchor=CENTER)
@@ -700,6 +758,11 @@ def uploadFile(usernameDataGave):
 
 
 def viewFile(usernameDataGave):
+    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+        accountsJSON = json.load(json_file)
+
+    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+
     root = Tk()
     root.geometry("600x300")
     root.title("Data Manager")
@@ -711,7 +774,8 @@ def viewFile(usernameDataGave):
     fileData = []
     for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-    if len(fileData) != 0:
+        FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+    if len(fileData) > 1:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
         "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
@@ -734,10 +798,20 @@ def viewFile(usernameDataGave):
     button_uploadFile = Button(root, text="View File", relief="flat", font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=viewFileWork)
     button_uploadFile.place(relx=0.5, rely=0.6, anchor=CENTER)
+    def on_closing():
+        for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
+            FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\" +usernameDataGave+"\\"+"Files\\"+file)
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
 
 
 def deleteFile(usernameDataGave):
+    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+        accountsJSON = json.load(json_file)
+
+    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+
     root = Tk()
     root.geometry("600x300")
     root.title("Data Manager")
@@ -749,6 +823,7 @@ def deleteFile(usernameDataGave):
     fileData = []
     for file in os.listdir(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
+        FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
     if len(fileData) != 0:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
@@ -761,6 +836,7 @@ def deleteFile(usernameDataGave):
 
     def deleteFileWork():
         dataName = comboxbox_options.get()
+        
         deletedataPrompt = messagebox.askyesno(
             "Delete Data", "Are you sure that you want to delete "+dataName+" ?")
         try:
@@ -770,7 +846,7 @@ def deleteFile(usernameDataGave):
                               usernameDataGave+"\\"+"Files\\" + dataName)
                     messagebox.showinfo(
                         "Successfully Delete", "We have successfully deleted the file")
-                    root.destroy()
+                    on_closing()
                     deleteFile(usernameDataGave)
                 else:
                     pass
@@ -780,7 +856,7 @@ def deleteFile(usernameDataGave):
                               usernameDataGave+"\\"+"Files\\" + x)
                 messagebox.showinfo("Successfully Delete",
                                     "We have successfully deleted the file")
-                root.destroy()
+                on_closing()
                 deleteFile(usernameDataGave)
 
         except:
@@ -789,22 +865,31 @@ def deleteFile(usernameDataGave):
     def viewdeleteFileWork():
         fileNameGot = comboxbox_options.get()
         if fileNameGot != "" and fileNameGot != "All":
-            os.startfile(str(os.getcwd())+"\Data\\" +
-                         usernameDataGave+"\\"+"Files\\" + fileNameGot)
+            os.startfile(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + fileNameGot)
         elif fileNameGot != "" and fileNameGot == "All":
             for x in fileData:
-                os.startfile(str(os.getcwd())+"\Data\\" +
-                             usernameDataGave+"\\"+"Files\\" + x)
+                os.startfile(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + x)
     button_uploadFile = Button(root, text="Delete File", relief="flat", font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=deleteFileWork)
     button_uploadFile.place(relx=0.2, rely=0.6)
     button_showGoingToDeleteFile = Button(root, text="Show File", relief=FLAT, font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=viewdeleteFileWork)
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
+
+    def on_closing():
+        for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
+            FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\" +
+                       usernameDataGave+"\\"+"Files\\"+file)
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
 
 
 def exportFile(usernameDataGave):
+    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+        accountsJSON = json.load(json_file)
+
+    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
     root = Tk()
     root.geometry("600x300")
     root.title("Data Manager")
@@ -816,7 +901,8 @@ def exportFile(usernameDataGave):
     fileData = []
     for file in os.listdir(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-    if len(fileData) != 0:
+        FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+    if len(fileData) > 1:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
         "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
@@ -829,28 +915,33 @@ def exportFile(usernameDataGave):
     def exportFileWork():
         username = usernameDataGave
         askedFilename = comboxbox_options.get()
+        
         folder = filedialog.askdirectory(title="Select folder")
         if askedFilename in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
-            shutil.copy(str(os.getcwd())+"\Data\\"+username+"\\" +
-                        "Files\\"+askedFilename, folder+"\\"+askedFilename)
+            target = incrementFile(folder, askedFilename)
+            shutil.copy(str(os.getcwd())+"\Data\\"+username+"\\" +"Files\\"+askedFilename, target)
+            
             messagebox.showinfo("Successfully exported file",
                                 "We have successfully exported "+askedFilename+" file.")
         elif askedFilename == "All":
             if len(os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\")) != 1:
-                datetimeGen = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                datetimeGen = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 exportFolder = folder+"\\" + datetimeGen+" Exported Files"
                 os.mkdir(exportFolder)
                 for file in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
                     shutil.copy(str(os.getcwd())+"\Data\\"+username +
                                 "\\"+"Files\\"+file, exportFolder+"\\"+file)
+                
                 messagebox.showinfo(
                     "Successfully exported files", "We have successfully exported all files.")
+
             else:
                 for file in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
                     shutil.copy(str(os.getcwd())+"\Data\\"+username +
                                 "\\"+"Files\\"+file, folder+"\\"+file)
                 messagebox.showinfo(
                     "Successfully exported files", "We have successfully exported all file.")
+
 
     def viewdeleteFileWork():
         fileNameGot = comboxbox_options.get()
@@ -867,13 +958,29 @@ def exportFile(usernameDataGave):
     button_showGoingToDeleteFile = Button(root, text="Show File", relief=FLAT, font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=viewdeleteFileWork)
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
+
+    def on_closing():
+        for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
+            FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\" +
+                       usernameDataGave+"\\"+"Files\\"+file)
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
 
-exportData("Hamzah Sajid")
-# deleteData("Hamzah Sajid")
-# makeData("Hamzah Sajid")
-# viewData("Hamzah Sajid")
-# loginAndSignUp()
+def main():
+    try:
+        loginAndSignUp()
+    finally:
+        with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+            accountsJSON = json.load(json_file)
 
-# TODO: In view data feature, when the user selects an item then it will auto show the data like in delete and export data
-# TODO: Add a listener which always see if the data.json file have changed or not if it is then reload the json file
+        keyEncryptor = accountsJSON["accounts"][userName][1]
+        for file in os.listdir(str(os.getcwd())+"\\Data\\"+userName+"\\"+"Files"):
+            FileManage(keyEncryptor, str(os.getcwd()) +
+                       "\\Data\\" + userName+"\\"+"Files\\"+file)
+
+
+if __name__ == '__main__':
+    main()
+
+# TODO: Maximize windows when the subwindow are closed
