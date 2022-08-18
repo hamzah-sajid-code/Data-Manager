@@ -165,20 +165,20 @@ def loginAndSignUp():
             if encryptedPassword == SHA512(password):
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
-                messagebox.showinfo("Login Successful","You are now logged in")
+                messagebox.showinfo("Login Successful","You are now logged in",parent=root)
                 
                 userName = username
                 change(username)
             else:
                 label_msg["fg"] = "red"
                 label_msg["text"] = "Username password is wrong! Please try again."
-                messagebox.showerror("Wrong password", "Username password is wrong! Please try again.")
+                messagebox.showerror("Wrong password", "Username password is wrong! Please try again.",parent=root)
                 
         else:
             label_msg["fg"] = "red"
             label_msg["text"] = "Username does not exists! Please try again."
-            messagebox.showerror("Username not found",
-                                 "Username does not exists! Please try again.")
+            messagebox.showerror(
+                "Username not found", "Username does not exists! Please try again.", parent=root)
             
             return username
     button_Login["command"] = handle
@@ -204,8 +204,7 @@ def loginAndSignUp():
                 username = usernameData
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Account Successful created"
-                messagebox.showinfo("Account created Successful",
-                                    "Your account is successfully make now we're logging you in")
+                messagebox.showinfo("Account created Successful","Your account is successfully make now we're logging you in",parent=root)
                 
                 login()
     root.mainloop()
@@ -269,16 +268,12 @@ def workWithData(usernameGave):
 
     def changeScreen():
         if label_Operations.get() == "Create Data":
-            root.wm_state('iconic')
             makeData(usernameGave)
         elif label_Operations.get() == "View Data":
-            root.wm_state('iconic')
             viewData(usernameGave)
         elif label_Operations.get() == "Delete Data":
-            root.wm_state('iconic')
             deleteData(usernameGave)
         elif label_Operations.get() == "Export Data":
-            root.wm_state('iconic')
             exportData(usernameGave)
 
     button_Do = Button(root, text="Continue", font=("@Yu Gothic UI Semibold", 13, "normal"), command=changeScreen,
@@ -332,17 +327,16 @@ def makeData(usernameDataGave):
                 with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
                 
-                messagebox.showinfo("Data Successfully stored",
-                                    "We have successfully saved your data!")
+                messagebox.showinfo("Data Successfully stored", "We have successfully saved your data!", parent=root)
 
             else:
                 
-                messagebox.showerror("Data not given properly",
-                                     "Please check if the data give is respectively to the label, there are blank spaces.")
+                messagebox.showerror(
+                    "Data not given properly", "Please check if the data give is respectively to the label, there are blank spaces.", parent=root)
         else:
             
             messagebox.showerror("Data not given properly",
-                                 "Please check if the data name is not empty and the label and data are not empty")
+                                 "Please check if the data name is not empty and the label and data are not empty", parent=root)
     button_createData = Button(root, text="Create Data", font=("@Yu Gothic UI Semibold", 15, "normal"), relief=FLAT,
                                bg="#70CED4", fg="white", command=makeDataNew)
     button_createData.place(relx=0.5, rely=0.7, anchor=CENTER)
@@ -378,7 +372,8 @@ def viewData(usernameDataGave):
     data = []
     for key in mainData["data"]:
         data.append(key)
-
+    if len(data) > 1:
+        data.append("All")
     comboxbox_options = ttk.Combobox(root, values=data, font=(
         "@Yu Gothic UI Semibold", 20, "bold"), state="readonly")
     comboxbox_options.place(relx=0.5, rely=0.2, anchor=CENTER)
@@ -399,6 +394,15 @@ def viewData(usernameDataGave):
                     f"\t{keyInDataDict} : {mainData['data'][dataName][keyInDataDict]}\n"
                 textbox.delete(1.0, END)
                 textbox.insert(END, dataShowText)
+        elif dataName != "" and dataName == "All":
+            dataShowText = "Data:"
+            for key in mainData["data"]:
+                dataShowText = dataShowText + "\nData in " + key + ":\n"
+                for key2 in mainData["data"][key]:
+                    dataShowText = dataShowText + "\t"+key2 + \
+                        " : " + mainData["data"][key][key2] + "\n"
+            textbox.delete(1.0, END)
+            textbox.insert(END, dataShowText)
     viewDataShow()
     def callData(event):
         viewDataShow()
@@ -479,7 +483,8 @@ def deleteData(usernameDataGave):
     def deleteDataShow():
         dataName = comboxbox_options.get()
         
-        deletedataPrompt = messagebox.askyesno("Delete Data", "Are you sure that you want to delete "+dataName+" ?")
+        deletedataPrompt = messagebox.askyesno(
+            "Delete Data", "Are you sure that you want to delete "+dataName+" ?", parent=root)
         if deletedataPrompt:
             print(deletedataPrompt)
             if dataName != "All":
@@ -508,7 +513,7 @@ def deleteData(usernameDataGave):
                 with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
                 messagebox.showinfo("Successfully Deleted",
-                                    "We have successfully deleted all the data.")
+                                    "We have successfully deleted all the data.", parent=root)
                 root.destroy()
                 deleteData(usernameDataGave)
         else:
@@ -567,7 +572,7 @@ def exportData(usernameDataGave):
 
     def exportDataWork():
         
-        folder = filedialog.askdirectory(title="Select folder")
+        folder = filedialog.askdirectory(title="Select folder", parent=root)
         dataName = comboxbox_options.get()
         if dataName != "" and dataName != "All":
             if dataName in mainData["data"]:
@@ -582,12 +587,12 @@ def exportData(usernameDataGave):
                     f.close()
                     
                     messagebox.showinfo(
-                        "successfully exported data", f"We have successfully exported data of {dataName}")
+                        "successfully exported data", f"We have successfully exported data of {dataName}", parent=root)
 
             else:
                 
                 messagebox.showerror(
-                    "Something went wrong please contact our engineers!")
+                    "Something went wrong please contact our engineers!", parent=root)
         elif dataName != "" and dataName == "All":
             fileName = "All Exported Data.txt"
             finalDest = incrementFile(folder, fileName)
@@ -602,7 +607,7 @@ def exportData(usernameDataGave):
             f.close()
             
             messagebox.showinfo("successfully exported data",
-                                "We have successfully exported all the data")
+                                "We have successfully exported all the data", parent=root)
 
     button_proccessData = Button(root, text="Export data", relief=FLAT, font=("@Yu Gothic UI Semibold", 20, "normal"),
                                  width=20, command=exportDataWork)
@@ -698,16 +703,12 @@ def workWithFiles(usernameGave):
 
     def changeScreen():
         if label_Operations.get() == "Upload File":
-            root.wm_state('iconic')
             uploadFile(usernameGave)
         elif label_Operations.get() == "View File":
-            root.wm_state('iconic')
             viewFile(usernameGave)
         elif label_Operations.get() == "Delete File":
-            root.wm_state('iconic')
             deleteFile(usernameGave)
         elif label_Operations.get() == "Export File":
-            root.wm_state('iconic')
             exportFile(usernameGave)
 
     button_Do = Button(root, text="Continue", font=("@Yu Gothic UI Semibold", 13, "normal"), command=changeScreen,
@@ -732,7 +733,7 @@ def uploadFile(usernameDataGave):
         keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
         try:
             
-            fileNames = filedialog.askopenfilenames(parent=root, title="Select file",)
+            fileNames = filedialog.askopenfilenames(parent=root, title="Select file")
             print(fileNames)
             fileNames = list(fileNames)
             if fileNames != []:
@@ -742,14 +743,16 @@ def uploadFile(usernameDataGave):
                     shutil.copy(orignal, target)
                     FileManage(keyEncryptor, target)
                 
-                messagebox.showinfo("File saved", "We have successfully saved you file/files!")
+                messagebox.showinfo(
+                    "File saved", "We have successfully saved you file/files!", parent=root)
             else:
                 
                 messagebox.showerror(
-                    "File not gave", "You have not provided us with the file.")
+                    "File not gave", "You have not provided us with the file.", parent=root)
         except FileNotFoundError:
             
-            messagebox.showerror("File not found", "We didn't found the expected file gave by you!")
+            messagebox.showerror(
+                "File not found", "We didn't found the expected file gave by you!", parent=root)
 
     button_uploadFile = Button(root, text="Upload File", relief="flat", font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=saveFile)
@@ -838,14 +841,14 @@ def deleteFile(usernameDataGave):
         dataName = comboxbox_options.get()
         
         deletedataPrompt = messagebox.askyesno(
-            "Delete Data", "Are you sure that you want to delete "+dataName+" ?")
+            "Delete Data", "Are you sure that you want to delete "+dataName+" ?", parent=root)
         try:
             if dataName != "" and dataName != "All":
                 if deletedataPrompt:
                     os.remove(str(os.getcwd())+"\Data\\" +
                               usernameDataGave+"\\"+"Files\\" + dataName)
                     messagebox.showinfo(
-                        "Successfully Delete", "We have successfully deleted the file")
+                        "Successfully Delete", "We have successfully deleted the file", parent=root)
                     on_closing()
                     deleteFile(usernameDataGave)
                 else:
@@ -855,7 +858,7 @@ def deleteFile(usernameDataGave):
                     os.remove(str(os.getcwd())+"\Data\\" +
                               usernameDataGave+"\\"+"Files\\" + x)
                 messagebox.showinfo("Successfully Delete",
-                                    "We have successfully deleted the file")
+                                    "We have successfully deleted the file", parent=root)
                 on_closing()
                 deleteFile(usernameDataGave)
 
@@ -916,13 +919,13 @@ def exportFile(usernameDataGave):
         username = usernameDataGave
         askedFilename = comboxbox_options.get()
         
-        folder = filedialog.askdirectory(title="Select folder")
+        folder = filedialog.askdirectory(title="Select folder", parent=root)
         if askedFilename in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
             target = incrementFile(folder, askedFilename)
             shutil.copy(str(os.getcwd())+"\Data\\"+username+"\\" +"Files\\"+askedFilename, target)
             
             messagebox.showinfo("Successfully exported file",
-                                "We have successfully exported "+askedFilename+" file.")
+                                "We have successfully exported "+askedFilename+" file.",parent=root)
         elif askedFilename == "All":
             if len(os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\")) != 1:
                 datetimeGen = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -933,14 +936,14 @@ def exportFile(usernameDataGave):
                                 "\\"+"Files\\"+file, exportFolder+"\\"+file)
                 
                 messagebox.showinfo(
-                    "Successfully exported files", "We have successfully exported all files.")
+                    "Successfully exported files", "We have successfully exported all files.", parent=root)
 
             else:
                 for file in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
                     shutil.copy(str(os.getcwd())+"\Data\\"+username +
                                 "\\"+"Files\\"+file, folder+"\\"+file)
                 messagebox.showinfo(
-                    "Successfully exported files", "We have successfully exported all file.")
+                    "Successfully exported files", "We have successfully exported all file.", parent=root)
 
 
     def viewdeleteFileWork():
@@ -982,5 +985,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# TODO: Maximize windows when the subwindow are closed
