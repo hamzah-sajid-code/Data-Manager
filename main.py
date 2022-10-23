@@ -114,19 +114,6 @@ def loginAndSignUp():
     def change(username):
         root.destroy()
         handlerWhatTo(username)
-    with open(main_destination+'accounts.json') as json_file:
-        accountsData = json.load(json_file)
-    if os.path.isfile(f"{temp_folder}/temp_datamanager"):
-        with open(f"{temp_folder}/temp_datamanager", "r+") as f:
-            data = (f.read()).split(" | ")
-        if data[0] in accountsData["accounts"]:
-            encryptedPassword = accountsData["accounts"][data[0]][0]
-            if encryptedPassword == SHA512(data[1]):
-                userName = data[0]
-                change(data[0])
-
-
-
 
     label_Title = Label(root, text="Data Manager", bg=color,
                         font=("@Yu Gothic UI Semibold", 20, "normal"))
@@ -712,6 +699,9 @@ def workWithFiles(usernameGave):
     root.title("Data Manager")
     root.configure(bg=color)
 
+    with open(accounts_file) as json_file:
+            accountsJSON = json.load(json_file)
+
     label_Title = Label(root, text="Work With File", font=(
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.1, anchor=CENTER)
@@ -999,16 +989,30 @@ def exportFile(usernameDataGave):
 
 def main():
     try:
-        loginAndSignUp()
+        with open(main_destination+'accounts.json') as json_file:
+            accountsData = json.load(json_file)
+        if os.path.isfile(f"{temp_folder}/temp_datamanager"):
+            with open(f"{temp_folder}/temp_datamanager", "r+") as f:
+                data = (f.read()).split(" | ")
+            if data[0] in accountsData["accounts"]:
+                encryptedPassword = accountsData["accounts"][data[0]][0]
+                if encryptedPassword == SHA512(data[1]):
+                    userName = data[0]
+                    try:
+                        handlerWhatTo(data[0])
+                    except:
+                        pass
+        else:
+            loginAndSignUp()
     finally:
         with open(accounts_file) as json_file:
             accountsJSON = json.load(json_file)
 
         keyEncryptor = accountsJSON["accounts"][userName][1]
         for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
-            FileManage(keyEncryptor, main_destination+
-                       "Data\\" + userName+"\\"+"Files\\"+file)
-
+            FileManage(keyEncryptor, main_destination+"Data\\" + userName+"\\"+"Files\\"+file)
+    except:
+        pass
 
 if __name__ == '__main__':
     main()
