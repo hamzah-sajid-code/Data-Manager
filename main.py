@@ -1011,8 +1011,6 @@ def main():
         keyEncryptor = accountsJSON["accounts"][userName][1]
         for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
             FileManage(keyEncryptor, main_destination+"Data\\" + userName+"\\"+"Files\\"+file)
-    except:
-        pass
 
 if __name__ == '__main__':
     main()
