@@ -1,7 +1,5 @@
-# Importing modules
 import json
 import os
-import time
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
@@ -11,9 +9,26 @@ import shutil
 import datetime
 import hashlib
 from cryptography.fernet import Fernet
-import threading
 
 color = "#CAF1DE"
+
+appdatapath = os.getenv('APPDATA')
+temp_folder = os.getenv("TEMP")
+
+main_destination = f"{appdatapath}\\Data Manager DB\\"
+if os.path.isdir(main_destination):
+    pass
+else:
+    os.system(f"mkdir \"{main_destination}\"")
+
+accounts_file = main_destination+"accounts.json"
+
+if os.path.isfile(accounts_file):
+        pass
+else:
+    os.system('echo {"accounts":{}} > accounts.json')
+    os.system(f'copy accounts.json "{main_destination}"')
+    os.remove("accounts.json")
 
 def SHA512(data):
     sha256Form = hashlib.sha512(data.encode()).hexdigest()
@@ -81,28 +96,37 @@ def incrementFile(destinationPath, fileNameJust):
             i += 1
     return destinationPath +"\\"+ fileNameJust.replace("\\", "")
 
-
-if os.path.isfile('accounts.json'):
-    pass
-else:
-    os.system('echo {"accounts":{}} > accounts.json')
-
 userEntryMode = "login"
 userName = ""
-
+def logout(win):
+    os.remove(temp_folder+"\\temp_datamanager")
+    win.destroy()
+    main()
 def loginAndSignUp():
+    global userName
     root = Tk()
-    label_msg = Label(root, text="", fg="red", bg=color,
-                      font=("Arial", 13, "bold"))
-    button_Login = Button()
-
-    def change(username):
-        root.destroy()
-        handlerWhatTo(username)
-
     root.title("Data Manager")
     root.geometry("600x500")
     root.configure(bg="#CAF1DE")
+    label_msg = Label(root, text="", fg="red", bg=color,
+                      font=("Arial", 13, "bold"))
+    button_Login = Button()
+    def change(username):
+        root.destroy()
+        handlerWhatTo(username)
+    with open(main_destination+'accounts.json') as json_file:
+        accountsData = json.load(json_file)
+    if os.path.isfile(f"{temp_folder}/temp_datamanager"):
+        with open(f"{temp_folder}/temp_datamanager", "r+") as f:
+            data = (f.read()).split(" | ")
+        if data[0] in accountsData["accounts"]:
+            encryptedPassword = accountsData["accounts"][data[0]][0]
+            if encryptedPassword == SHA512(data[1]):
+                userName = data[0]
+                change(data[0])
+
+
+
 
     label_Title = Label(root, text="Data Manager", bg=color,
                         font=("@Yu Gothic UI Semibold", 20, "normal"))
@@ -128,7 +152,6 @@ def loginAndSignUp():
 
     button_DontHaveAAccount = Button(root, text="Sign Up", relief="flat", bg=color, font=("Arial", 13, "normal"),
                                      fg="#2C95F6", )
-
     label_msg.place(relx=0.5, rely=0.6, anchor=CENTER)
 
     def changeUserEntryMode():
@@ -147,14 +170,15 @@ def loginAndSignUp():
     button_DontHaveAAccount["command"] = changeUserEntryMode
     button_DontHaveAAccount.place(relx=0.59, rely=0.69, )
 
+    with open(main_destination+'accounts.json') as json_file:
+        accountsData = json.load(json_file)
     def handle():
+        global userName
         if userEntryMode == "login":
             login()
         elif userEntryMode == "signup":
             signup()
 
-    with open('accounts.json') as json_file:
-        accountsData = json.load(json_file)
 
     def login():
         global userName
@@ -163,10 +187,12 @@ def loginAndSignUp():
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username][0]
             if encryptedPassword == SHA512(password):
+                d = f"{username} | {password}"
+                with open(f"{temp_folder}/temp_datamanager", "w+") as f:
+                    f.write(d)
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
                 messagebox.showinfo("Login Successful","You are now logged in",parent=root)
-                
                 userName = username
                 change(username)
             else:
@@ -195,11 +221,11 @@ def loginAndSignUp():
                 encryptedPassword = SHA512(password)
                 key = GenerateKey()
                 accountsData["accounts"][username] = encryptedPassword, key["key_in_string"]
-                with open('accounts.json', 'w') as outfile:
+                with open(main_destination+'accounts.json', 'w') as outfile:
                     json.dump(accountsData, outfile)
                 os.system("cls")
-                os.system(f'mkdir \"{str(os.getcwd())}"\\Data\\"{username}\"')
-                with open(str(os.getcwd()) + "\\Data\\" + username + "\\" + "data.json", "w") as f:
+                os.system(f'mkdir \"{main_destination}Data\\{username}\"')
+                with open(main_destination + "Data\\" + username + "\\" + "data.json", "w") as f:
                     f.write("{\"data\": {}}")
                 username = usernameData
                 label_msg["fg"] = "lime"
@@ -242,7 +268,8 @@ def handlerWhatTo(usernameFromData):
     button_go = Button(root, text="Go!", relief="flat", bg="#70CED4", width=30, height=1,
                        font=("@Yu Gothic UI Semibold", 15, "bold"), command=changeScript)
     button_go.place(relx=0.5, rely=0.7, anchor=CENTER)
-
+    button_logout = Button(root, text="Log Out", font=("@Yu Gothic UI Semibold", 12, "bold"), relief="flat", bg="white", command=lambda: logout(root))
+    button_logout.place(relx=0.01, rely=0.01)
     root.mainloop()
 
 def workWithData(usernameGave):
@@ -265,7 +292,9 @@ def workWithData(usernameGave):
     button_back = Button(root, text="Back", font=(
         "@Yu Gothic UI Semibold", 10, "normal"), fg="white", bg="#31A3E2", command=back)
     button_back.place(relx=0.01, rely=0.03)
-
+    button_logout = Button(root, text="Log Out", font=(
+        "@Yu Gothic UI Semibold", 12, "bold"), relief="flat", bg="white", command=lambda: logout(root))
+    button_logout.place(relx=0.87, rely=0.01)
     def changeScreen():
         if label_Operations.get() == "Create Data":
             makeData(usernameGave)
@@ -306,9 +335,9 @@ def makeData(usernameDataGave):
     input_Labels.place(relx=0.5, rely=0.4, anchor=CENTER)
     input_data.place(relx=0.5, rely=0.5, anchor=CENTER)
 
-    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+    with open(main_destination+"Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
         dataJSON = json.load(json_file)
-    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+    with open(main_destination + "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
     key = accountsJSON["accounts"][usernameDataGave][1]
     def makeDataNew():
@@ -324,7 +353,7 @@ def makeData(usernameDataGave):
                 dataDict = dict(zip(labelIn, dataIn))
                 finalData[nameDataIn] = dataDict
                 dataJSON["data"].update(finalData)
-                with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
+                with open(main_destination+ "Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
                 
                 messagebox.showinfo("Data Successfully stored", "We have successfully saved your data!", parent=root)
@@ -352,9 +381,9 @@ def viewData(usernameDataGave):
     label_Title = Label(root, text="View Data", font=(
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
-    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+    with open(main_destination+ "Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
         dataJSON = json.load(json_file)
-    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+    with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
     key = accountsJSON["accounts"][usernameDataGave][1]
     # Decryption Data
@@ -419,9 +448,9 @@ def deleteData(usernameDataGave):
     label_Title = Label(root, text="Delete Data", font=(
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
-    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+    with open(main_destination+ "Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
         dataJSON = json.load(json_file)
-    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+    with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
     
     keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
@@ -486,7 +515,6 @@ def deleteData(usernameDataGave):
         deletedataPrompt = messagebox.askyesno(
             "Delete Data", "Are you sure that you want to delete "+dataName+" ?", parent=root)
         if deletedataPrompt:
-            print(deletedataPrompt)
             if dataName != "All":
                 indexOfKey = list(mainData["data"]).index(dataName)
                 dictDataKey = list(mainData["data"])[indexOfKey]
@@ -504,13 +532,13 @@ def deleteData(usernameDataGave):
                         dataNameData.append(DataManage(keyEncryptor, mainData["data"][keyDataE][dataGotKey], do="encryption"))
                     dataJSON["data"][realkeyData] = dict(zip(dataNameKey, dataNameData))
 
-                with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
+                with open(main_destination+ "Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
                 root.destroy()
                 deleteData(usernameDataGave)
             else:
                 dataJSON = {"data": {}}
-                with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
+                with open(main_destination+ "Data\\" + usernameDataGave + "\\" + "data.json", "w") as f:
                     json.dump(dataJSON, f)
                 messagebox.showinfo("Successfully Deleted",
                                     "We have successfully deleted all the data.", parent=root)
@@ -538,9 +566,9 @@ def exportData(usernameDataGave):
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     data = []
-    with open(str(os.getcwd()) + "\\Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
+    with open(main_destination+ "Data\\" + usernameDataGave + "\\" + "data.json") as json_file:
         dataJSON = json.load(json_file)
-    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+    with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
     keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
     # Decryption Data
@@ -566,7 +594,7 @@ def exportData(usernameDataGave):
     try:
         comboxbox_options.current(0)
     except:
-        print("error")
+        pass
     textbox = Text(root, font=("calbri", 10, "normal"), width=75,)
     textbox.place(relx=0.5, rely=0.5, anchor=CENTER, height=200)
 
@@ -578,7 +606,6 @@ def exportData(usernameDataGave):
             if dataName in mainData["data"]:
                 dataName2 = dataName + ".txt"
                 endDestination = incrementFile(str(folder), dataName2)
-                print(endDestination)
                 with open(endDestination, "w") as f:
                     f.write("Your data in " + dataName + ":\n")
                     for key in mainData["data"][dataName]:
@@ -599,7 +626,6 @@ def exportData(usernameDataGave):
             f = open(finalDest, "w")
             f.write("Your data:")
             for key in mainData["data"]:
-                print(key)
                 f.write("\nData in " + key + ":\n")
                 for key2 in mainData["data"][key]:
                     f.write("\t"+key2 + " : " +
@@ -676,8 +702,8 @@ def FileManage(keyUse, file_loc, action="encryption", change_name="no"):
 
 
 def workWithFiles(usernameGave):
-    if not os.path.exists(str(os.getcwd())+"\\Data\\"+usernameGave+"\\"+"Files"):
-        os.makedirs(str(os.getcwd())+"\Data\\"+usernameGave+"\\"+"Files")
+    if not os.path.exists(main_destination+"Data\\"+usernameGave+"\\"+"Files"):
+        os.makedirs(main_destination+"Data\\"+usernameGave+"\\"+"Files")
     else:
         pass
 
@@ -693,7 +719,9 @@ def workWithFiles(usernameGave):
                                     state="readonly", font=("@Yu Gothic UI Semibold", 15, "normal"))
     label_Operations.place(relx=0.5, rely=0.35, anchor=CENTER)
     label_Operations.current(0)
-
+    button_logout = Button(root, text="Log Out", font=(
+        "@Yu Gothic UI Semibold", 12, "bold"), relief="flat", bg="white", command=lambda: logout(root))
+    button_logout.place(relx=0.87, rely=0.01)
     def back():
         root.destroy()
         handlerWhatTo(usernameGave)
@@ -728,18 +756,17 @@ def uploadFile(usernameDataGave):
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
 
     def saveFile():
-        with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+        with open(main_destination+ "accounts.json") as json_file:
             accountsJSON = json.load(json_file)
         keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
         try:
             
             fileNames = filedialog.askopenfilenames(parent=root, title="Select file")
-            print(fileNames)
             fileNames = list(fileNames)
             if fileNames != []:
                 for file in fileNames:
                     orignal = file
-                    target = incrementFile(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\" + "Files\\",os.path.basename(file))
+                    target = incrementFile(main_destination+"Data\\"+usernameDataGave+"\\" + "Files\\",os.path.basename(file))
                     shutil.copy(orignal, target)
                     FileManage(keyEncryptor, target)
                 
@@ -761,7 +788,7 @@ def uploadFile(usernameDataGave):
 
 
 def viewFile(usernameDataGave):
-    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+    with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
 
     keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
@@ -775,9 +802,9 @@ def viewFile(usernameDataGave):
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     fileData = []
-    for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
+    for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-        FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+        FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
     if len(fileData) > 1:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
@@ -791,26 +818,26 @@ def viewFile(usernameDataGave):
     def viewFileWork():
         fileNameGot = comboxbox_options.get()
         if fileNameGot != "" and fileNameGot != "All":
-            os.startfile(str(os.getcwd())+"\Data\\" +
+            os.startfile(main_destination+"\Data\\" +
                          usernameDataGave+"\\"+"Files\\" + fileNameGot)
         elif fileNameGot != "" and fileNameGot == "All":
             for x in fileData:
                 if x != "All":
-                    os.startfile(str(os.getcwd())+"\\Data\\" +
+                    os.startfile(main_destination+"Data\\" +
                                  usernameDataGave+"\\"+"Files\\" + x)
     button_uploadFile = Button(root, text="View File", relief="flat", font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=viewFileWork)
     button_uploadFile.place(relx=0.5, rely=0.6, anchor=CENTER)
     def on_closing():
-        for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
-            FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\" +usernameDataGave+"\\"+"Files\\"+file)
+        for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
+            FileManage(keyEncryptor, main_destination+"Data\\" +usernameDataGave+"\\"+"Files\\"+file)
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
 
 
 def deleteFile(usernameDataGave):
-    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+    with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
 
     keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
@@ -824,9 +851,9 @@ def deleteFile(usernameDataGave):
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     fileData = []
-    for file in os.listdir(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files"):
+    for file in os.listdir(main_destination+"\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-        FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+        FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
     if len(fileData) != 0:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
@@ -845,7 +872,7 @@ def deleteFile(usernameDataGave):
         try:
             if dataName != "" and dataName != "All":
                 if deletedataPrompt:
-                    os.remove(str(os.getcwd())+"\Data\\" +
+                    os.remove(main_destination+"\Data\\" +
                               usernameDataGave+"\\"+"Files\\" + dataName)
                     messagebox.showinfo(
                         "Successfully Delete", "We have successfully deleted the file", parent=root)
@@ -854,8 +881,8 @@ def deleteFile(usernameDataGave):
                 else:
                     pass
             elif dataName != "" and dataName == "All" and deletedataPrompt:
-                for x in os.listdir(str(os.getcwd())+"\Data\\" + usernameDataGave+"\\"+"Files\\"):
-                    os.remove(str(os.getcwd())+"\Data\\" +
+                for x in os.listdir(main_destination+"\Data\\" + usernameDataGave+"\\"+"Files\\"):
+                    os.remove(main_destination+"\Data\\" +
                               usernameDataGave+"\\"+"Files\\" + x)
                 messagebox.showinfo("Successfully Delete",
                                     "We have successfully deleted the file", parent=root)
@@ -868,10 +895,10 @@ def deleteFile(usernameDataGave):
     def viewdeleteFileWork():
         fileNameGot = comboxbox_options.get()
         if fileNameGot != "" and fileNameGot != "All":
-            os.startfile(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + fileNameGot)
+            os.startfile(main_destination+"\Data\\" +usernameDataGave+"\\"+"Files\\" + fileNameGot)
         elif fileNameGot != "" and fileNameGot == "All":
             for x in fileData:
-                os.startfile(str(os.getcwd())+"\Data\\" +usernameDataGave+"\\"+"Files\\" + x)
+                os.startfile(main_destination+"\Data\\" +usernameDataGave+"\\"+"Files\\" + x)
     button_uploadFile = Button(root, text="Delete File", relief="flat", font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=deleteFileWork)
     button_uploadFile.place(relx=0.2, rely=0.6)
@@ -880,8 +907,8 @@ def deleteFile(usernameDataGave):
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
 
     def on_closing():
-        for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
-            FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\" +
+        for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
+            FileManage(keyEncryptor, main_destination+"Data\\" +
                        usernameDataGave+"\\"+"Files\\"+file)
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_closing)
@@ -889,7 +916,7 @@ def deleteFile(usernameDataGave):
 
 
 def exportFile(usernameDataGave):
-    with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+    with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
 
     keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
@@ -902,9 +929,9 @@ def exportFile(usernameDataGave):
         "@Yu Gothic UI Semibold", 30, "bold"), bg=color)
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
     fileData = []
-    for file in os.listdir(str(os.getcwd())+"\Data\\"+usernameDataGave+"\\"+"Files"):
+    for file in os.listdir(main_destination+"\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-        FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+        FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
     if len(fileData) > 1:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
@@ -920,9 +947,9 @@ def exportFile(usernameDataGave):
         askedFilename = comboxbox_options.get()
         
         folder = filedialog.askdirectory(title="Select folder", parent=root)
-        if askedFilename in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
+        if askedFilename in os.listdir(main_destination+"\\Data\\"+username+"\\"+"Files\\"):
             target = incrementFile(folder, askedFilename)
-            shutil.copy(str(os.getcwd())+"\Data\\"+username+"\\" +"Files\\"+askedFilename, target)
+            shutil.copy(main_destination+"\Data\\"+username+"\\" +"Files\\"+askedFilename, target)
             
             messagebox.showinfo("Successfully exported file",
                                 "We have successfully exported "+askedFilename+" file.",parent=root)
@@ -932,7 +959,7 @@ def exportFile(usernameDataGave):
                 exportFolder = folder+"\\" + datetimeGen+" Exported Files"
                 os.mkdir(exportFolder)
                 for file in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
-                    shutil.copy(str(os.getcwd())+"\Data\\"+username +
+                    shutil.copy(main_destination+"\Data\\"+username +
                                 "\\"+"Files\\"+file, exportFolder+"\\"+file)
                 
                 messagebox.showinfo(
@@ -940,7 +967,7 @@ def exportFile(usernameDataGave):
 
             else:
                 for file in os.listdir(os.getcwd()+"\Data\\"+username+"\\"+"Files\\"):
-                    shutil.copy(str(os.getcwd())+"\Data\\"+username +
+                    shutil.copy(main_destination+"\Data\\"+username +
                                 "\\"+"Files\\"+file, folder+"\\"+file)
                 messagebox.showinfo(
                     "Successfully exported files", "We have successfully exported all file.", parent=root)
@@ -949,11 +976,11 @@ def exportFile(usernameDataGave):
     def viewdeleteFileWork():
         fileNameGot = comboxbox_options.get()
         if fileNameGot != "" and fileNameGot != "All":
-            os.startfile(str(os.getcwd())+"\Data\\" +
+            os.startfile(main_destination+"\Data\\" +
                          usernameDataGave+"\\"+"Files\\" + fileNameGot)
         elif fileNameGot == "" and fileNameGot == "All":
             for x in fileData:
-                os.startfile(str(os.getcwd())+"\Data\\" +
+                os.startfile(main_destination+"\Data\\" +
                              usernameDataGave+"\\"+"Files\\" + x)
     button_uploadFile = Button(root, text="Export File", relief="flat", font=(
         "@Yu Gothic UI Semibold", 16, "normal"), command=exportFileWork)
@@ -963,8 +990,8 @@ def exportFile(usernameDataGave):
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
 
     def on_closing():
-        for file in os.listdir(str(os.getcwd())+"\\Data\\"+usernameDataGave+"\\"+"Files"):
-            FileManage(keyEncryptor, str(os.getcwd())+"\\Data\\" +
+        for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
+            FileManage(keyEncryptor, main_destination+"Data\\" +
                        usernameDataGave+"\\"+"Files\\"+file)
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_closing)
@@ -974,14 +1001,15 @@ def main():
     try:
         loginAndSignUp()
     finally:
-        with open(str(os.getcwd()) + "\\accounts.json") as json_file:
+        with open(accounts_file) as json_file:
             accountsJSON = json.load(json_file)
 
         keyEncryptor = accountsJSON["accounts"][userName][1]
-        for file in os.listdir(str(os.getcwd())+"\\Data\\"+userName+"\\"+"Files"):
-            FileManage(keyEncryptor, str(os.getcwd()) +
-                       "\\Data\\" + userName+"\\"+"Files\\"+file)
+        for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
+            FileManage(keyEncryptor, main_destination+
+                       "Data\\" + userName+"\\"+"Files\\"+file)
 
 
 if __name__ == '__main__':
     main()
+
