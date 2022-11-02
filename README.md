@@ -2,7 +2,7 @@
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.2-blue.svg?cacheSeconds=2592000" />
   <a href="https://www.gitbook.com/" target="_blank">
-    <img alt="Documentation" src="https://img.shields.io/badge/documentation-Working On-yellow.svg" />
+    <img alt="Documentation" src="https://img.shields.io/badge/documentation-Working On-orange.svg" />
   </a>
   <a href="https://github.com/hamzah-sajid-code/Data-Manager/blob/master/LICENSE" target="_blank">
     <img alt="License: MIT License" src="https://img.shields.io/badge/License-MIT License-yellow.svg" />
