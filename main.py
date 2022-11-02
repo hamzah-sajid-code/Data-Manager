@@ -1,3 +1,5 @@
+import sys
+import signal
 import json
 import os
 import tkinter as tk
@@ -166,10 +168,10 @@ def loginAndSignUp():
         elif userEntryMode == "signup":
             signup()
 
-
     def login():
         global userName
-        username = input_Username.get()
+        username = input_Username.get().strip()
+        print(username)
         password = input_Password.get()
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username][0]
@@ -198,7 +200,13 @@ def loginAndSignUp():
 
     def signup():
         username = input_Username.get()
-        password = input_Password.get()
+        password = (input_Password.get()).strip()
+        list_forb = "{}()[].,:;+-*/&|<>=~$\"'"
+        for char in list_forb:
+            if char in username:
+                label_msg["fg"] = "red"
+                label_msg["text"] = "Please Don't add symbol to your account username"
+                return
         usernameData = username
         if username != "" and password != "":
             if username in accountsData["accounts"]:
@@ -987,30 +995,34 @@ def exportFile(usernameDataGave):
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
 
-def main():
-    try:
-        with open(main_destination+'accounts.json') as json_file:
-            accountsData = json.load(json_file)
-        if os.path.isfile(f"{temp_folder}/temp_datamanager"):
-            with open(f"{temp_folder}/temp_datamanager", "r+") as f:
-                data = (f.read()).split(" | ")
-            if data[0] in accountsData["accounts"]:
-                encryptedPassword = accountsData["accounts"][data[0]][0]
-                if encryptedPassword == SHA512(data[1]):
-                    userName = data[0]
-                    try:
-                        handlerWhatTo(data[0])
-                    except:
-                        pass
-        else:
-            loginAndSignUp()
-    finally:
-        with open(accounts_file) as json_file:
-            accountsJSON = json.load(json_file)
+def signal_handler(signal, frame):
+    with open(accounts_file) as json_file:
+        accountsJSON = json.load(json_file)
 
-        keyEncryptor = accountsJSON["accounts"][userName][1]
-        for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
-            FileManage(keyEncryptor, main_destination+"Data\\" + userName+"\\"+"Files\\"+file)
+    keyEncryptor = accountsJSON["accounts"][userName][1]
+    for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
+        FileManage(keyEncryptor, main_destination+"Data\\" + userName+"\\"+"Files\\"+file)
+    
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+def main():
+    with open(main_destination+'accounts.json') as json_file:
+        accountsData = json.load(json_file)
+    if os.path.isfile(f"{temp_folder}/temp_datamanager"):
+        with open(f"{temp_folder}/temp_datamanager", "r+") as f:
+            data = (f.read()).split(" | ")
+        if data[0] in accountsData["accounts"]:
+            encryptedPassword = accountsData["accounts"][data[0]][0]
+            if encryptedPassword == SHA512(data[1]):
+                userName = data[0]
+                try:
+                    handlerWhatTo(data[0])
+                except:
+                    pass
+    else:
+        loginAndSignUp()
 
 if __name__ == '__main__':
     main()
