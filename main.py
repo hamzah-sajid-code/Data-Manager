@@ -101,7 +101,6 @@ def incrementFile(destinationPath, fileNameJust):
 userEntryMode = "login"
 userName = ""
 def logout(win):
-    os.remove(temp_folder+"\\temp_datamanager")
     win.destroy()
     main()
 def loginAndSignUp():
@@ -176,9 +175,6 @@ def loginAndSignUp():
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username][0]
             if encryptedPassword == SHA512(password):
-                d = f"{username} | {password}"
-                with open(f"{temp_folder}/temp_datamanager", "w+") as f:
-                    f.write(d)
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
                 messagebox.showinfo("Login Successful","You are now logged in",parent=root)
@@ -1008,22 +1004,7 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 def main():
-    with open(main_destination+'accounts.json') as json_file:
-        accountsData = json.load(json_file)
-    if os.path.isfile(f"{temp_folder}/temp_datamanager"):
-        with open(f"{temp_folder}/temp_datamanager", "r+") as f:
-            data = (f.read()).split(" | ")
-        if data[0] in accountsData["accounts"]:
-            encryptedPassword = accountsData["accounts"][data[0]][0]
-            if encryptedPassword == SHA512(data[1]):
-                userName = data[0]
-                try:
-                    handlerWhatTo(data[0])
-                except:
-                    pass
-    else:
-        loginAndSignUp()
+    loginAndSignUp()
 
 if __name__ == '__main__':
     main()
-
