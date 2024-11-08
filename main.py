@@ -160,11 +160,27 @@ def loginAndSignUp():
     input_Username["font"] = ("@Yu Gothic UI Semibold", 15, "normal")
     input_Username.place(relx=0.5, rely=0.2, anchor=CENTER)
 
-    input_Password = EntryWithPlaceholder(root, placeholder="Password")
+    
+    
+        # Password Entry with Placeholder and Hidden Characters
+    input_Password = EntryWithPlaceholder(root, placeholder="Password",)
     input_Password["width"] = 40
     input_Password["font"] = ("@Yu Gothic UI Semibold", 15, "normal")
     input_Password.place(relx=0.5, rely=0.3, anchor=CENTER)
 
+    checkbox_var = tk.IntVar()
+    checkBox_showPassword = Checkbutton(root, text="Show Password", bg=color, fg='red',
+                                        font=("Arial", 10), variable=checkbox_var)
+    checkBox_showPassword.place(relx=0.8, rely=0.36, anchor=CENTER)
+
+    def check_password_entry():
+        if input_Password.get() != "" and input_Password.get() != "Password" and checkbox_var.get() != 1:
+            input_Password["show"] = '*'
+        else:
+            input_Password["show"] = ''
+        root.after(1, check_password_entry)
+
+    check_password_entry()
     button_Login = Button(root, text="Log In", relief="flat",
                           padx=70, pady=5, bg="#2C95F6", fg="white", font=("Arial", 10, "bold"))
     button_Login.place(relx=0.5, rely=0.45, anchor=CENTER)
