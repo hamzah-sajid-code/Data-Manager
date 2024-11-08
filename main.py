@@ -12,6 +12,10 @@ import datetime
 import hashlib
 import random
 from cryptography.fernet import Fernet
+import base64
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 
 color = "#CAF1DE"
 
@@ -77,6 +81,17 @@ def RandomStringAlgoWithEncryption(key):
 def UsableKey(key_data):
     n = SHA512(SHA256(SHA512(SHA256(SHA256(SHA512(SHA512(SHA512(SHA256(SHA512(SHA512(SHA512(SHA256(SHA512(SHA512(key_data)))))))))))))))
     return n
+
+def generate_key(password: bytes, salt: bytes) -> bytes:
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=480000,
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password))
+    return key
+
 class EntryWithPlaceholder(tk.Entry):
     def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
         super().__init__(master)
@@ -119,7 +134,9 @@ def incrementFile(destinationPath, fileNameJust):
 userEntryMode = "login"
 userName = ""
 def logout(win):
+    global userEntryMode
     win.destroy()
+    userEntryMode="login"
     main()
 def loginAndSignUp():
     global userName
@@ -197,10 +214,27 @@ def loginAndSignUp():
                 with open(main_destination+'accounts.json', 'r+') as outfile:
                     accountsJSON = json.load(outfile)
                     print(accountsJSON["accounts"][username])
-                    accountsJSON["accounts"][username].append(RandomStringAlgoWithEncryption(accountsJSON["accounts"][username][1]))
+                    accountsJSON["accounts"][username][3] = accountsJSON["accounts"][username][2]
+                    accountsJSON["accounts"][username][2] = RandomStringAlgoWithEncryption(accountsJSON["accounts"][username][1])
                     n.append(accountsJSON)
                 with open(main_destination+'accounts.json', "w+") as outfile:
                     json.dump(n[0], outfile)
+                with open(main_destination+"Data\\" + username + "\\" + "data.json") as json_file:
+                    dataJSON = json.load(json_file)
+                if accountsJSON["accounts"][username][3] != "":
+                    key_old = generate_key(bytes(UsableKey(n[0]["accounts"][username][3]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][username][3]), "utf-8"))
+                    key_new = generate_key(bytes(UsableKey(n[0]["accounts"][username][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][username][2]), "utf-8"))
+                    mainData = {"data":{}}
+                    for keyData in dataJSON["data"]:
+                        dataNameKey = []
+                        dataNameData = []
+                        realkeyData = DataManage(key_new,(DataManage(key_old, keyData, do="decryption")))
+                        for dataGotKey in dataJSON["data"][keyData]:
+                            dataNameKey.append(DataManage(key_new,(DataManage(key_old, dataGotKey, do="decryption"))))
+                            dataNameData.append(DataManage(key_new,(DataManage(key_old, dataJSON["data"][keyData][dataGotKey], do="decryption"))))
+                        mainData["data"][realkeyData] = dict(zip(dataNameKey, dataNameData))
+                    with open(main_destination+"Data\\" + username + "\\" + "data.json", "w+") as outfile:
+                        json.dump(mainData, outfile)
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
                 messagebox.showinfo("Login Successful","You are now logged in",parent=root)
@@ -237,7 +271,7 @@ def loginAndSignUp():
             else:
                 encryptedPassword = SHA512(password)
                 key = GenerateKey()
-                accountsData["accounts"][username] = encryptedPassword, key["key_in_string"]
+                accountsData["accounts"][username] = encryptedPassword, key["key_in_string"], '', ''  # password, general key, new key, old key
                 with open(main_destination+'accounts.json', 'w') as outfile:
                     json.dump(accountsData, outfile)
                 os.system("cls")
@@ -356,7 +390,7 @@ def makeData(usernameDataGave):
         dataJSON = json.load(json_file)
     with open(main_destination + "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
-    key = accountsJSON["accounts"][usernameDataGave][1]
+    key = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
     def makeDataNew():
         nameDataIn = input_DataName.get()
         nameDataIn = DataManage(key, nameDataIn, do="encryption")
@@ -402,7 +436,7 @@ def viewData(usernameDataGave):
         dataJSON = json.load(json_file)
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
-    key = accountsJSON["accounts"][usernameDataGave][1]
+    key = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
     # Decryption Data
     mainData = {"data":{}}
     for keyData in dataJSON["data"]:
@@ -470,7 +504,7 @@ def deleteData(usernameDataGave):
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
     
-    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+    keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
     # Decryption Data
     mainData = {"data": {}}
     for keyData in dataJSON["data"]:
@@ -587,7 +621,7 @@ def exportData(usernameDataGave):
         dataJSON = json.load(json_file)
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
-    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+    keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
     # Decryption Data
     mainData = {"data": {}}
     for keyData in dataJSON["data"]:
@@ -764,7 +798,7 @@ def workWithFiles(usernameGave):
     button_Do.place(relx=0.5, rely=0.55, anchor=CENTER)
     root.mainloop()
 
-
+file_status = "encrypted"
 def uploadFile(usernameDataGave):
     root = Tk()
     root.geometry("600x300")
@@ -778,7 +812,7 @@ def uploadFile(usernameDataGave):
     def saveFile():
         with open(main_destination+ "accounts.json") as json_file:
             accountsJSON = json.load(json_file)
-        keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+        keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
         try:
             
             fileNames = filedialog.askopenfilenames(parent=root, title="Select file")
@@ -788,7 +822,9 @@ def uploadFile(usernameDataGave):
                     orignal = file
                     target = incrementFile(main_destination+"Data\\"+usernameDataGave+"\\" + "Files\\",os.path.basename(file))
                     shutil.copy(orignal, target)
-                    FileManage(keyEncryptor, target)
+                    if file_status == "decrypted":
+                        FileManage(keyEncryptor, target)
+                        file_status = "encrypted"
                 
                 messagebox.showinfo(
                     "File saved", "We have successfully saved you file/files!", parent=root)
@@ -810,8 +846,7 @@ def uploadFile(usernameDataGave):
 def viewFile(usernameDataGave):
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
-
-    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+    keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
 
     root = Tk()
     root.geometry("600x300")
@@ -824,7 +859,9 @@ def viewFile(usernameDataGave):
     fileData = []
     for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-        FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+        if file_status == "encrypted":
+            FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+            file_status = "decrypted"
     if len(fileData) > 1:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
@@ -850,7 +887,9 @@ def viewFile(usernameDataGave):
     button_uploadFile.place(relx=0.5, rely=0.6, anchor=CENTER)
     def on_closing():
         for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
-            FileManage(keyEncryptor, main_destination+"Data\\" +usernameDataGave+"\\"+"Files\\"+file)
+            if file_status == "decrypted":
+                FileManage(keyEncryptor, main_destination+"Data\\" +usernameDataGave+"\\"+"Files\\"+file)
+                file_status = "encrypted"
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
@@ -860,7 +899,7 @@ def deleteFile(usernameDataGave):
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
 
-    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+    keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
 
     root = Tk()
     root.geometry("600x300")
@@ -873,7 +912,9 @@ def deleteFile(usernameDataGave):
     fileData = []
     for file in os.listdir(main_destination+"\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-        FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+        if file_status == "encrypted":
+            FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+            file_status = "decrypted"
     if len(fileData) != 0:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
@@ -928,8 +969,9 @@ def deleteFile(usernameDataGave):
 
     def on_closing():
         for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
-            FileManage(keyEncryptor, main_destination+"Data\\" +
-                       usernameDataGave+"\\"+"Files\\"+file)
+            if file_status == "decrypted":
+                FileManage(keyEncryptor, main_destination+"Data\\" + usernameDataGave+"\\"+"Files\\"+file)
+                file_status = "encrypted"
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
@@ -939,7 +981,7 @@ def exportFile(usernameDataGave):
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
 
-    keyEncryptor = accountsJSON["accounts"][usernameDataGave][1]
+    keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
     root = Tk()
     root.geometry("600x300")
     root.title("Data Manager")
@@ -951,7 +993,9 @@ def exportFile(usernameDataGave):
     fileData = []
     for file in os.listdir(main_destination+"\Data\\"+usernameDataGave+"\\"+"Files"):
         fileData.append(file)
-        FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+        if file_status == "encrypted":
+            FileManage(keyEncryptor, main_destination+"Data\\"+usernameDataGave+"\\"+"Files\\"+file, action="decryption")
+            file_status = "decrypted"
     if len(fileData) > 1:
         fileData.append("All")
     comboxbox_options = ttk.Combobox(root, values=fileData, font=(
@@ -1011,8 +1055,9 @@ def exportFile(usernameDataGave):
 
     def on_closing():
         for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
-            FileManage(keyEncryptor, main_destination+"Data\\" +
-                       usernameDataGave+"\\"+"Files\\"+file)
+            if file_status == "decrypted":
+                FileManage(keyEncryptor, main_destination+"Data\\" + usernameDataGave+"\\"+"Files\\"+file)
+                file_status = "encrypted"
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
@@ -1023,7 +1068,9 @@ def signal_handler(signal, frame):
 
     keyEncryptor = accountsJSON["accounts"][userName][1]
     for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
-        FileManage(keyEncryptor, main_destination+"Data\\" + userName+"\\"+"Files\\"+file)
+        if file_status == "decrypted":
+            FileManage(keyEncryptor, main_destination+"Data\\" + userName+"\\"+"Files\\"+file)
+            file_status = "encrypted"
     
     sys.exit(0)
 
