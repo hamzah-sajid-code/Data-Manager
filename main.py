@@ -205,7 +205,6 @@ def loginAndSignUp():
     def login():
         global userName
         username = input_Username.get().strip()
-        print(username)
         password = input_Password.get()
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username][0]
@@ -213,7 +212,6 @@ def loginAndSignUp():
                 n = []
                 with open(main_destination+'accounts.json', 'r+') as outfile:
                     accountsJSON = json.load(outfile)
-                    print(accountsJSON["accounts"][username])
                     accountsJSON["accounts"][username][3] = accountsJSON["accounts"][username][2]
                     accountsJSON["accounts"][username][2] = RandomStringAlgoWithEncryption(accountsJSON["accounts"][username][1])
                     n.append(accountsJSON)
@@ -224,6 +222,8 @@ def loginAndSignUp():
                 if accountsJSON["accounts"][username][3] != "":
                     key_old = generate_key(bytes(UsableKey(n[0]["accounts"][username][3]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][username][3]), "utf-8"))
                     key_new = generate_key(bytes(UsableKey(n[0]["accounts"][username][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][username][2]), "utf-8"))
+                    
+                    # For text data START
                     mainData = {"data":{}}
                     for keyData in dataJSON["data"]:
                         dataNameKey = []
@@ -235,6 +235,13 @@ def loginAndSignUp():
                         mainData["data"][realkeyData] = dict(zip(dataNameKey, dataNameData))
                     with open(main_destination+"Data\\" + username + "\\" + "data.json", "w+") as outfile:
                         json.dump(mainData, outfile)
+                    # For text data END
+                    # For file data START
+                    for file in os.listdir(main_destination+"Data\\"+username+"\\"+"Files"):
+                        FileManage(key_old, main_destination+"Data\\"+username+"\\"+"Files\\"+file, action="decryption")
+                        FileManage(key_new, main_destination+"Data\\"+username+"\\"+"Files\\"+file)
+                    # For file data END
+                    
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
                 messagebox.showinfo("Login Successful","You are now logged in",parent=root)
@@ -800,6 +807,7 @@ def workWithFiles(usernameGave):
 
 file_status = "encrypted"
 def uploadFile(usernameDataGave):
+    global file_status
     root = Tk()
     root.geometry("600x300")
     root.title("Data Manager")
@@ -810,6 +818,7 @@ def uploadFile(usernameDataGave):
     label_Title.place(relx=0.5, rely=0.07, anchor=CENTER)
 
     def saveFile():
+        global file_status
         with open(main_destination+ "accounts.json") as json_file:
             accountsJSON = json.load(json_file)
         keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
@@ -822,9 +831,7 @@ def uploadFile(usernameDataGave):
                     orignal = file
                     target = incrementFile(main_destination+"Data\\"+usernameDataGave+"\\" + "Files\\",os.path.basename(file))
                     shutil.copy(orignal, target)
-                    if file_status == "decrypted":
-                        FileManage(keyEncryptor, target)
-                        file_status = "encrypted"
+                    FileManage(keyEncryptor, target)
                 
                 messagebox.showinfo(
                     "File saved", "We have successfully saved you file/files!", parent=root)
@@ -844,10 +851,10 @@ def uploadFile(usernameDataGave):
 
 
 def viewFile(usernameDataGave):
+    global file_status
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
     keyEncryptor = generate_key(bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"), bytes(UsableKey(accountsJSON["accounts"][usernameDataGave][2]), "utf-8"))
-
     root = Tk()
     root.geometry("600x300")
     root.title("Data Manager")
@@ -873,6 +880,7 @@ def viewFile(usernameDataGave):
         pass
 
     def viewFileWork():
+        global file_status
         fileNameGot = comboxbox_options.get()
         if fileNameGot != "" and fileNameGot != "All":
             os.startfile(main_destination+"\Data\\" +
@@ -886,6 +894,7 @@ def viewFile(usernameDataGave):
         "@Yu Gothic UI Semibold", 16, "normal"), command=viewFileWork)
     button_uploadFile.place(relx=0.5, rely=0.6, anchor=CENTER)
     def on_closing():
+        global file_status
         for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
             if file_status == "decrypted":
                 FileManage(keyEncryptor, main_destination+"Data\\" +usernameDataGave+"\\"+"Files\\"+file)
@@ -896,6 +905,7 @@ def viewFile(usernameDataGave):
 
 
 def deleteFile(usernameDataGave):
+    global file_status
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
 
@@ -926,6 +936,7 @@ def deleteFile(usernameDataGave):
         pass
 
     def deleteFileWork():
+        global file_status
         dataName = comboxbox_options.get()
         
         deletedataPrompt = messagebox.askyesno(
@@ -968,6 +979,7 @@ def deleteFile(usernameDataGave):
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
 
     def on_closing():
+        global file_status
         for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
             if file_status == "decrypted":
                 FileManage(keyEncryptor, main_destination+"Data\\" + usernameDataGave+"\\"+"Files\\"+file)
@@ -978,6 +990,7 @@ def deleteFile(usernameDataGave):
 
 
 def exportFile(usernameDataGave):
+    global file_status
     with open(main_destination+ "accounts.json") as json_file:
         accountsJSON = json.load(json_file)
 
@@ -1007,6 +1020,7 @@ def exportFile(usernameDataGave):
         pass
 
     def exportFileWork():
+        global file_status
         username = usernameDataGave
         askedFilename = comboxbox_options.get()
         
@@ -1054,6 +1068,7 @@ def exportFile(usernameDataGave):
     button_showGoingToDeleteFile.place(relx=0.6, rely=0.6)
 
     def on_closing():
+        global file_status
         for file in os.listdir(main_destination+"Data\\"+usernameDataGave+"\\"+"Files"):
             if file_status == "decrypted":
                 FileManage(keyEncryptor, main_destination+"Data\\" + usernameDataGave+"\\"+"Files\\"+file)
@@ -1063,14 +1078,15 @@ def exportFile(usernameDataGave):
     root.mainloop()
 
 def signal_handler(signal, frame):
+    global file_status
     with open(accounts_file) as json_file:
         accountsJSON = json.load(json_file)
 
     keyEncryptor = accountsJSON["accounts"][userName][1]
-    for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
-        if file_status == "decrypted":
+    if file_status == "decrypted":
+        for file in os.listdir(main_destination+"Data\\"+userName+"\\"+"Files"):
             FileManage(keyEncryptor, main_destination+"Data\\" + userName+"\\"+"Files\\"+file)
-            file_status = "encrypted"
+        file_status = "encrypted"
     
     sys.exit(0)
 
