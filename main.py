@@ -10,6 +10,7 @@ from tkinter import filedialog
 import shutil
 import datetime
 import hashlib
+import random
 from cryptography.fernet import Fernet
 
 color = "#CAF1DE"
@@ -33,9 +34,12 @@ else:
     os.remove("accounts.json")
 
 def SHA512(data):
-    sha256Form = hashlib.sha512(data.encode()).hexdigest()
-    return sha256Form
+    sha512Form = hashlib.sha512(data.encode()).hexdigest()
+    return sha512Form
 
+def SHA256(data):
+    sha256Form = hashlib.sha256(data.encode()).hexdigest()
+    return sha256Form
 
 def GenerateKey():
     f = Fernet.generate_key()
@@ -58,7 +62,21 @@ def DataManage(key, string, do="encryption"):
         decrypted = fernetKey.decrypt(string)
         return str(decrypted.decode())
 
+def RandomStringAlgoWithEncryption(key):
+    date_time = (datetime.datetime.now()).strftime("%m/%d/%Y, %H:%M:%S")
+    random.seed(random.uniform(-10000000000,1000000000))
+    x = random.random() * random.uniform(-10000000000,1000000000)
+    y = int((lambda dt: (((dt.year + random.random()) * (dt.isocalendar()[1] + random.random()) * (dt.month + random.random()) * (dt.hour + random.random()) * (dt.minute + random.random())) ** (dt.day + random.random())) / (dt.second + random.random() or 1))(datetime.datetime.now()))
+    random.seed(x*y)
+    ultimate_random = str(int((x+y)*random.random())) + date_time
+    random.shuffle(list(ultimate_random))
+    ultimate_random = ''.join(ultimate_random)
+    encrypted_random = DataManage(key,ultimate_random)
+    return encrypted_random
 
+def UsableKey(key_data):
+    n = SHA512(SHA256(SHA512(SHA256(SHA256(SHA512(SHA512(SHA512(SHA256(SHA512(SHA512(SHA512(SHA256(SHA512(SHA512(key_data)))))))))))))))
+    return n
 class EntryWithPlaceholder(tk.Entry):
     def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
         super().__init__(master)
@@ -175,6 +193,14 @@ def loginAndSignUp():
         if username in accountsData["accounts"]:
             encryptedPassword = accountsData["accounts"][username][0]
             if encryptedPassword == SHA512(password):
+                n = []
+                with open(main_destination+'accounts.json', 'r+') as outfile:
+                    accountsJSON = json.load(outfile)
+                    print(accountsJSON["accounts"][username])
+                    accountsJSON["accounts"][username].append(RandomStringAlgoWithEncryption(accountsJSON["accounts"][username][1]))
+                    n.append(accountsJSON)
+                with open(main_destination+'accounts.json', "w+") as outfile:
+                    json.dump(n[0], outfile)
                 label_msg["fg"] = "lime"
                 label_msg["text"] = "Logged In successfully"
                 messagebox.showinfo("Login Successful","You are now logged in",parent=root)
